@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificador de Cobertura — Red BASA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F2F4F7;color:#1C2B3A;min-height:100vh}
+.hdr{background:#0F2340;padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-icon{width:34px;height:34px;background:#0B9E8A;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.hdr-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hdr-title{color:#fff;font-size:15px;font-weight:700}
+.hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:1px}
+.hdr-badge{background:rgba(11,158,138,.2);border:1px solid rgba(11,158,138,.4);color:#13C4AD;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px}
+.wrap{max-width:980px;margin:0 auto;padding:28px 18px 60px}
+.panel{background:#fff;border-radius:12px;border:1px solid #DDE2EA;box-shadow:0 2px 12px rgba(15,35,64,.06);overflow:hidden;margin-bottom:16px}
+.ph{background:#0F2340;padding:12px 20px;display:flex;align-items:center;gap:9px}
+.ph svg{width:15px;height:15px;stroke:#13C4AD;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ph span{color:#fff;font-size:13px;font-weight:600}
+.pb{padding:18px 20px;padding-bottom:280px}
+.g4{display:grid;grid-template-columns:2fr 1.1fr 1.3fr auto;gap:14px;align-items:end}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em}
+.field input,.field select{font-family:inherit;font-size:13.5px;color:#1C2B3A;background:#F2F4F7;border:1.5px solid #DDE2EA;border-radius:8px;padding:9px 12px;outline:none;transition:border-color .15s;width:100%}
+.field input:focus,.field select:focus{border-color:#0B9E8A;background:#fff;box-shadow:0 0 0 3px rgba(11,158,138,.1)}
+.field select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px}
+.field select:disabled{opacity:.4;cursor:not-allowed}
+.ac-wrap{position:relative}
+.ac-dd{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#ffffff !important;border:1.5px solid #0B9E8A;border-radius:8px;max-height:240px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 8px 24px rgba(15,35,64,.18)}
+.ac-dd.open{display:block}
+.ac-item{padding:9px 13px;font-size:13px;cursor:pointer;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;gap:8px;color:#1C2B3A !important;background:#ffffff !important}
+.ac-item span{color:#1C2B3A !important;font-size:13px}
+.ac-item:hover{background:#F0FDF9 !important;color:#0B9E8A !important}
+.ac-item:hover span{color:#0B9E8A !important}
+.ac-item:last-child{border-bottom:none}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:#059669}
+.dot-no{background:#DC2626}
+.btn-ok{font-family:inherit;font-size:13.5px;font-weight:600;color:#fff;background:#0B9E8A;border:none;border-radius:8px;padding:10px 22px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.btn-ok:hover{background:#0A8A78}
+.btn-ok:disabled{opacity:.4;cursor:not-allowed;background:#0B9E8A}
+#result{display:none}
+.banner{border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;border:2px solid}
+.b-ok{background:#ECFDF5;border-color:#6EE7B7}
+.b-warn{background:#FFFBEB;border-color:#FCD34D}
+.b-err{background:#FEF2F2;border-color:#FCA5A5}
+.bi{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.b-ok .bi{background:#059669}.b-warn .bi{background:#D97706}.b-err .bi{background:#DC2626}
+.bi svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.bt{font-size:14px;font-weight:700}
+.b-ok .bt{color:#065F46}.b-warn .bt{color:#92400E}.b-err .bt{color:#991B1B}
+.bs{font-size:12.5px;margin-top:3px}
+.b-ok .bs{color:#047857}.b-warn .bs{color:#B45309}.b-err .bs{color:#B91C1C}
+.ai-box{background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:14px;font-size:13px;line-height:1.7;color:#1e3a5f}
+.ai-lbl{font-size:10px;font-weight:700;color:#1E40AF;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#fff;border-radius:10px;border:1px solid #DDE2EA;overflow:hidden}
+.card.full{grid-column:1/-1}
+.ch{background:#F8FAFC;padding:10px 14px;border-bottom:1px solid #DDE2EA;font-size:11px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:7px}
+.ch svg{width:13px;height:13px;stroke:#0B9E8A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cb{padding:12px 14px;font-size:13px;line-height:1.65;color:#1C2B3A}
+.cb p{margin-bottom:4px}.cb p:last-child{margin-bottom:0}
+.chip{background:#E0F2FE;color:#0369A1;font-size:11.5px;padding:2px 9px;border-radius:20px;display:inline-block;margin:2px}
+.ss{background:#ECFDF5;border:1px solid #6EE7B7;color:#065F46;font-size:11.5px;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;margin:2px}
+.sn{background:#F8FAFC;border:1px solid #E2E8F0;color:#94A3B8;font-size:11.5px;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;margin:2px}
+.s-hl{outline:2px solid #0B9E8A;outline-offset:2px}
+a.lnk{color:#0B9E8A;text-decoration:underline;font-size:12.5px;word-break:break-all}
+footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
+@media(max-width:700px){.g4{grid-template-columns:1fr 1fr}.cards2{grid-template-columns:1fr}}
+@media(max-width:440px){.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+    <div><div class="hdr-title">Verificador de Cobertura</div><div class="hdr-sub">Red BASA &middot; Obras Sociales 2026</div></div>
+  </div>
+  <div class="hdr-badge">USO INTERNO &middot; ADMISIONES</div>
+</div>
+<div class="wrap">
+  <div class="panel">
+    <div class="ph"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Consulta de cobertura</span></div>
+    <div class="pb">
+      <div class="g4">
+        <div class="field">
+          <label>Obra social / financiador</label>
+          <div class="ac-wrap">
+            <input type="text" id="os-in" placeholder="Escribi para buscar..." autocomplete="off">
+            <div class="ac-dd" id="ac-dd"></div>
+          </div>
+        </div>
+        <div class="field"><label>Plan</label><select id="plan-sel" disabled><option value="">Elegi la OS</option></select></div>
+        <div class="field"><label>Sede del sanatorio</label><select id="sede-sel" disabled><option value="">Elegi la OS</option></select></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn-ok" id="btn-ok" disabled onclick="buscar()">Verificar &#8594;</button></div>
+      </div>
+    </div>
+  </div>
+  <div id="result"></div>
+</div>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter</footer>
+<script>
+var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
+var SEDES=['CENTRO GALLEGO','SAN JOSE','POLICLINICO CENTRAL UOM','UOM AVELLANEDA','SANTA CLARA QUILMES','SANTA CLARA VARELA','UOM SAN MARTIN','CENTRO MEDICO TALAR','SANTA CLARA ZARATE','SAGRADO CORAZON DE DON TORCUATO','GENERAL SARMIENTO','MORON','CAMPANA','SANATORIO LOBOS','ROSENDO GARCIA','UOM CASILDA','SAN JUAN','STA CLARA MENDOZA','DORREGO','SOCORROS MUTUOS','SANTA ROSA'];
+var D=[
+["ACTIVO","OSDE - ORGANIZACION DE SERVICIOS DIRECTOS EMPRESARIOS","","PLAN 2 110 - PLAN 2 210 - PLAN 2 310 - PLAN 2 410 - PLAN 2 450 - PLAN 2 510 - PLAN 6 030 - PLAN 8 260 - PLAN 8 360 - PLAN 8 430 - OSDE 1015 - OSDE 2025","- SJO- OSDE - CG- OSDE - SAR- OSDE","DNI, CREDENCIAL DIGITAL O FISICA","DEPENDE PLAN","OS","NO TIENE","Si","1","1","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","SWISS MEDICAL GROUP","Sistema de conectividad Consulta en la página web de prestadores: www.swissmedical.com.ar/prestadores , en la sección Validador de asociados Centro de atención al Prestador: 0810-333-7737 | lunes a viernes de 8 a 20 hs.","PLAN UNICO, a pesar de que tiene todos los planes, debe ingresarlo como PLAN UNICO","- SJO- SWISS MEDICAL GROUP - Idem, el resto de los Sanatorios.","• DNI, CREDENCIAL DIGITAL","OS","OS","NO TIENE","swissmedical.com.ar/prepagaclientes/autorizaciones","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSDOP","1. NORMAS DE ATENCIÓN ACCESO AL SISTEMA PRESTACIONAL 1. Es condición excluyente para acceder al sistema prestacional, la presentación de credencial OSDOP y DNI. 2. Todas las prestaciones requieren presentación de formularios oficiales de OSDOP. 3. Están exceptuados de coseguros: Plan Materno Infantil, Coberturas especiales y Oncología. Se identificará cada plan con autorización previa (sello) de la Obra Social o leyenda preimpresa 'no abona coseguro'.","PLAN UNICO","","• DNI, CREDENCIAL DIGITAL","","","","","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","POLICIA FEDERAL","","PLAN UNICO","- SJO- POLICIA FEDERAL ARGENTINA","","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPERYH (O S Personal de Edificios Rentas y Horizontal)","El afiliado, a fin de acceder a la prestación médica que solicite ante EL PRESTADOR deberá, además de presentar la respectiva orden médica deberá acreditar su identidad y su condición de afiliado activo, mediante la presentación de: - Carnet de afiliación - DNI - Último recibo de haberes.","PLAN UNICO","","• DNI, CREDENCIAL, ULTIMO RECIBO DE HABERES","","OS","NO TIENE","","0","0","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSSSB (BANCARIOS)","Identificación Del Beneficiario • Presentar Credencial Digital y DNI. En caso de extravío: Certificado Provisorio de Afiliación + DNI. 2. Atención Ambulatoria Consultas: Planes S300J y S300E: Sin autorización previa. Validar orden/comprobante vía Validador Prestacional Web. Sin coseguro. - Planes S100 y S200: Orden médica + coseguro (salvo exentos). Prácticas de Baja/Mediana Complejidad: - S300J y S300E: Orden con diagnóstico de médico de cartilla. Validador web. - S100 y S200: Orden médica completa. Validador web.","PLANES: S300J, S300 E, S100 S200","- SJO- BANCARIOS (OSSSB) - CG- OSSSB (BANCARIOS) - SAR- OSSSB (BANCARIOS)","CREDENCIAL DIGITAL, DNI,","","","DEPENDE EL PLAN","","1","1","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","RAS ( Red Argentina de SALUD) // NO CONFUNDIR CON RAS (RED ARGENTINA DE SANATORIOS)","Los beneficiarios pueden acreditarse con: Carnet físico o virtual de prepaga de origen con o sin logo de la Red Argentina de Salud • O bien, Carnet digital gestionado a través de la App de la Red Argentina de Salud • O bien, Orden de autorización emitida por Red Argentina de Salud En cualquier caso, debe ser acompañado por el DNI. Logotipo de la Red Argentina de Salud Modelo de carnet virtual, al cual se accede por la App redargentinadesalud2 o www.rascomra.com.ar","PLAN UNICO","","• Carnet físico o virtual de prepaga de origen con o sin logo de la Red Argentina de Salud • O bien, Carnet digital gestionado a través de la App de la Red Argentina de Salud • O bien, Orden de autorización emitida por Red Argentina de Salud","","","","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","RIOMEDICA SA","En caso de faltar de alguna documentación, llamar a mesa operativa para confirmar afiliación. 0800-999-7605","OSPAGA y OSPM (Maestranza)","TA-RIOMEDICA FV-RIOMEDICA QU-RIOMEDICA CA-RIOMEDICA AV-RIOMEDICA DT-RIOMEDICA SM-RIOMEDICA SAR-RIOMEDICA MOR- RIOMEDICA ZA- RIOMEDICA","DNI, CARNET Y RECIBO | PRACTICAS AMBULATORIAS REQUIEREN PRE-AUTORIZACIÓN","OS","OS","NO TIENE","http://autorizaciones.rio-med.com.ar/rio/index.php","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","RIOMEDICA pero SOLO UTA / OSCTCP","En caso de faltar de alguna documentación, llamar a mesa operativa para confirmar afiliación. 0800-999-7606","NO TIENE zárate y campana, entra directo","TA-RIOMEDICA FV-RIOMEDICA QU-RIOMEDICA AV-RIOMEDICA DT-RIOMEDICA SM-RIOMEDICA SAR-RIOMEDICA MOR- RIOMEDICA","DNI, CARNET Y RECIBO | PRACTICAS AMBULATORIAS REQUIEREN PRE-AUTORIZACIÓN","OS","","","","0","0","1","1","1","1","1","1","0","1","1","1","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSV - OBRA SOCIAL DE VAREADORES","Deben verificar la vigencia de la credencial.Solicitudes de autorización: vía whatsapp 115948-4154 o mail autorizaciones@osvareadores.com.ar","PLAN UNICO","","• CREDENCIAL PROVISORIA O DIGITAL + DNI","OS","VER CUADRO COSEGURO","DEPENDE PLAN","","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPIV - OS. DEL PERSONAL DE LA INDUSTRIA DEL VIDRIO","Los coseguros se cobran únicamente si la autorización indica copago Autorizaciones autorizaciones@ospividrio.com.ar e internaciones: internaciones@ospividrio.com.ar GUARDIA: Presentar DNI físico. - En ningún caso deberá abonar coseguro alguno. ,NO CORRESPONDE AUTORIZACION PARA GUARDIA..","Plan unico","GRAL E INT - OSPIV PLAN UNICO","• CREDENCIAL PROVISORIA O DIGITAL + DNI","","","DEPENDE PLAN","","0","0","0","1","1","1","1","1","1","1","1","1","1","0","1","1","0","0","0","0","0"],
+["ACTIVO","IMAGEN EN SALUD (IMESA)","TODAS LAS PRÁCTICAS requieren autorización.","OSPPCYQ/OSPAPEL (OS del personal del papel, carton y quimicos) -- OSEMM (OS empleados marina mercante) -- OSPM - Maritimos (A partir de 1 de ENERO 2026)","","DNI Y CREDENCIAL DIGITAL","A CARGO AFIL","CON COSEGURO","DEPENDE PLAN","https://login.sisaludevo1.com.ar/sisaludevo/servlet/sisalud","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSMEDICA - FEMECA","OSMÉDICA es la obra social de FEMECA, la Federación Médica Gremial de la Capital Federal","PLAN UNICO","- SJO- OSMEDICA FEMECA - Idem, resto de los centros por acronimo.","DNI, CREDENCIAL FISICA o DIGITAL","A CARGO AFIL","A CARGO AFIL","DEPENDE PLAN","https://app.autorizame.com.ar/AutorizaMe/com.autorizame.login","1","1","1","1","1","1","0","0","0","0","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","BIO CRISTAL SALUD SA - CRISTAL IMPORTANTE: NO CONFUNDIR CON RAS ( RED ARGENTINA DE SALUD)","• BIOCRISTAL es la empresa que gerencia CRISTAL • Los afiliados a CRISTAL SALUD plan ZAFIRO y ESMERALDA abonan coseguros únicamente en SALUD MENTAL y atención Domiciliaria. • RAS PLAN 500 ESTA DE BAJA, VA CON CRISTAL Autorizaciones: autorizaciones@cristalsalud.ar e internaciones: internaciones@cristalsalud.ar IMPORTANTE: NO SE ATIENDEN AFILIADOS DE OSAMOC","• CRISTAL: ZAFIRO, ESMERALDA, CUARZO, 500 -- • RAS: TOTAL, 500 (BAJA, PORQUE VA CON CRISTAL AHORA) , 1000 y 1500 -- Cristal Zafiro -- Cristal Esmeralda -- Cristal Cuarzo (Centro Gallego NO) -- Cristal 500 (Centro Gallego NO) -- Cristal TOTAL (Centro Gallego NO)","","• CREDENCIAL PROVISORIA O DIGITAL + DNI","","AFILIADX","DEPENDE PLAN","https://cristalsalud.ar/soyafiliado","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","1","1","1","1","1"],
+["ACTIVO","OSPSA - O.S PERSONAL DE LA SANIDAD ARG","No convenido salud mental , En caso de faltar de alguna documentación, llamar a mesa operativa para confirmar afiliación. 0800 999 7264. Denuncia Internacion 4122-1149 de lunes a viernes de 7 a 16 hs. Por fuera al 4122-1149","PLAN UNICO","","CREDENCIAL + DNI + BONO CONSULTA DE SANIDAD(Pueden verificar la afiliacion en la pagina adjuntada en validador)","-","-","BONO CONSULTA","Guardia; deberán validar la afiliación https://portal.sanidad.org.ar/AtGuardias","1","0","0","1","1","1","0","1","0","0","0","0","1","0","0","0","0","0","0","0","1"],
+["ACTIVO","ACCORD SALUD - UNION PERSONAL - UP","Autorizaciones de prácticas ambulatorias: auditoriacentral@unionpersonal.com.ar e internaciones: internacionesup@unionpersonal.com.ar","Plan up10 y pmo (solo guardia en Sarmiento)","","dni y carnet fisico o virtual","NO DICE NADA","NO DICE NADA","","NO","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSEIV - OBRA SOCIAL DEL VIDRIO","• DOCUMENTO NACIONAL DE IDENTIDAD (DNI) • CARNET DIGITAL (el mismo no indicará fecha de vencimiento, tiene un código QR que puede escanearse desde cualquier celular)","PLAN PMO, PLAN AZUL Y PLAN PLATINO.","","LOS AFILIADOS DEBERAN PRESENTAR AL MOMENTO DE ATENCION (CONSULTAS DE ESPECIALISTAS Y PRACTICAS AMBULATORIAS) • DOCUMENTO NACIONAL DE IDENTIDAD (DNI) • CARNET DIGITAL • ORDEN MEDICA (Física/digital) • BONO-AUTORIZACION (Físico/digital)","","","","https://oseiv.ddns.net/Autorizaciones/#/micrositio","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPIV - Personal de la Indutria del Vestido","VESTIDO","R DE DEPENDENCIA Y MONOTRIBUTO","","• DNI Y CARNET DIGITAL","","","SI","","0","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPIL (LECHEROS)","","PLAN PBO PS, PLAN PSA","","","","","","","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","SANAR SALUD - OSCAMGLYP","Obra Social de Colocadores de Azulejos, Mosaicos, Graniteros, Lustradores y Porcelaneros, ESTA GERENCIADA por SANAR SALUD // PLAN PMO ABONA COSEGUROS - PMI NO ABONA","• PLAN PMO Y PLAN PMI","","• CREDENCIAL FISICA O DIGITAL, VIGENTE A LA FECHA, •DNI","","","DEPENDE PLAN","","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","GMA INGEGRAL SALUD S.A ( GEMA SALUD)","GEMA SALUD","• PLAN PMO","","","","","","","0","1","1","1","0","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","RAS - RED ARGENTINA DE SANATORIOS // RP SALUD - RED PRESTADORES DE SALUD - RP SALUD (AGRUPACIÓN SANATORIAL SUR)","AGRUPACIÓN gerencia RED DE PRESTADORES // EN LA COLUMNA DE VALIDADOR ESTÁ ADJUNTO EL PADRÓN VIRTUAL, INGRESAN CON DNI // COSEGURO SOLO EN SALUD MENTAL (PLAN BLANCO, que antes era de RAS (RED ARGENTINA DE SANATORIOS, AHORA INGRESA POR RP SALUD.)","PLAN BLANCO, 1000, 1500, TOTAL","PLAN 1000, 1500, TOTAL ( INGRESA COMO GRAL Y SJ- RAS (RED ARGENTINA DE SANATORIOS) PLAN BLANCO, INGRESA COMO GRAL- RP SALUD (RED PRESTADORES DE SALUD)","• DNI Y CREDENCIAL DIGITAL","","AFILIADX","SOLO EN SALUD MENTAL","https://rpsalud.ar/home","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","1","1","0","1","1"],
+["ACTIVO","SALUD PLENA","","• PLAN AZUL, PLATEADO y DORADO","","","","","","","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","ALTUS SALUD - OSPIS","ALTUS SALUD, se encarga de gerenciar OSPIS","OSPIS - PLAN UNICO","- SJO- ALTUS SALUD S.R.L- OSPIS (OS DEL PERSONAL DE INSTALACIONES SANITARIAS) - GRAL- ALTUS SALUD - OSPIS","• DNI Y CREDENCIAL DIGITAL","","","","https://altus.dafexcel.com/login.html?msg=logout&fromLogout=1","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","ACTIVA SALUD S.R.L.","","• Plan AS-500 SERVESALUD -- • Plan AS-700 SERVESALUD -- • Plan AS-800 SERVESALUD -- • PLAN AS-910 CAMPSIC -- • PLAN AS-980 CAMPSIC -- • Plan AS-25 OSEN -- • Plan AS-25 M OSFATLYF -- • Plan AS-25 OSPADEP // 50 OSPADEP -- • Plan AS-50 OSEN -- • Plan AS-50 -- • Plan AS-150 OSPADEP -- • Plan AS-150 OSEN -- • Plan AS-200 OSPADEP -- • Plan AS-200 OSEN -- • Plan AS-300 OSPADEP -- • Plan AS-500 E / AS-500 E SERVESALUD -- • Plan AS-610 OSPTA -- • Plan AS-700 E / AS-700 E SERVESALUD -- • Plan AS-700 OSEN -- • Plan AS-710 OSPTA -- • Plan AS-800-E / AS-800 E SERVESALUD -- • Plan AS-800 OSEN -- • Plan AS-800 OSFATLYF -- • PLAN AS-910 E CAMPSIC -- • PLAN AS-980 E CAMPSIC -- - PLAN OSCONARA","","• DNI, CREDENCIAL, CORROBORAR EN LA WEB","","AS-500 SERVESALUD // AS-500 E // AS-700 SERVESALUD // AS-700 E // AS-800 SERVESALUD // AS-800 E // AS- 910 CAMPSIC","DEPENDE PLAN","https://prestadores.activasalud.com.ar/index.php","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","ADMED - EN EL HOGAR SA","","Plan unico","","","CUBRE APLICACIONES","OS","NO TIENE","https://micamsalud.com.ar","1","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","VS GROUP S.A (ASMEPRIV)","Todas las practicas ambulatorias REQUIEREN AUTORIZACION CONSULTAS: El afiliado abona copago correspondiente según plan. PRÁCTICAS: No requieren autorizacion (referidas a la urgencia). Abona el copago estipulado en la grilla. APB en urgencias: a cargo del afiliado en el PLAN PMOusuario rsof","Planes con Coseguro: PLUS, HM, PLATINIUM -- Planes sin Coseguro: GOLD, AS 100, AS 105, AS 110, AS 120","SJO- ASMEPRIV Idem los demás centros, ej: SAR- ASMEPRIV, MOR- ASMEPRIV, etc.","• CREDENCIAL PROVISORIA O DIGITAL","CUBRE APLICACIONES","AMB AFILIADO Y GUARDIA OS","PROPIOS","https://www.asmepriv.com.ar/intranet.php","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","CONSULT - RENT S.R.L.: MGN","","","","","","","","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","ACCESSMED SA - OSFOT + OSPIB(BOTONEROS)","","• OSPIB (BOTONEROS)","","• CREDENCIAL PROVISORIA O DIGITAL","CUBRE APLICACIONES","AFILIADX","PROPIOS","NO","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","NIVEAU MEDIZIN","","","","","","","","","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","MEDILAES","","","","","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PROSAL MEDICINA PRIVADA","","PLAN ARAWI, AYLLU, ALIWE","","CREDENCIAL DIGITAL O FISICA, DNI","","AFILIADX","","","1","1","0","0","1","1","1","0","1","1","0","1","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","BON SALUD (MEDICINA PRIVADA)","Autorizaciones: mai autorizaciones@bonsalud.com.ar o whatsapp: 112275-0069","","","• CREDENCIAL PROVISORIA O DIGITAL","DEPENDE PLAN","AFILIADX","DEPENDE PLAN","","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","BENE SALUD (MEDICINA PRIVADA)","Solicitud de autorizaciones: Whatsapp:112317-3574 o via mail autorizaciones@benesalud.com.ar","","","dni fisico credencial puede ser fisica o digital o orovisoria","DEPENDE PLAN","AFILIADX","DEPENDE PLAN","","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OPDEA - Obra Social del Personal de Dirección de empresa","","PLAN 00 -- PLAN 01 -- PLAN 02 -- PLAN 03 -- PLAN 04 -- PLAN 05 -- PLAN 10 -- PLAN 12 -- PLAN 15 -- PLAN 21 -- PLAN OP -- PLAN PE","","dni fisico, credencial, autorización segun prestacion.","","","","","0","0","1","1","1","1","1","1","1","1","1","0","0","1","0","0","0","0","0","0","0"],
+["ACTIVO","BRISTOL MEDICINE","• LAS NORMAS QUE ESTÁN EN ENLACE Y/O DRIVE: SON LAS ULTIMAS, SI BIEN DICE VIGENCIA 2024, PRESENTAN VIGENCIA A LA FECHA 2026","• BM300/BM400/BM500/QM2000/EMPRESA 210/EMPRESA 310/ORO/PLATINO (SIN COSEGUROS) -- •QF2000/QF2010/QNSOL/QOSFE/LOCAL/EMPRESA110/TRADICIONAL/PLATA/QC2000/QC2010/QNSC/BM180/BM200 (CON COSEGUROS) -- NO PLAN OSFE INTEGRAL","- SJO- BRISTOL MEDICINE - GRAL- BRISTOL MEDICINE SRL - CG- BRISTOL MEDICINE SRL","• DNI y CREDENCIAL DIGITAL","DEPENDE PLAN","DEPENDE PLAN","DEPENDE PLAN","","1","1","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","COBENSIL S.A. - COBER - COBERMED","Acreditación del afiliado Para acceder a prestaciones o trámites, el afiliado debe presentar: DNI Credencial de COBER / COBERMED / CM SALUD / OSMECON SAN MARTIN (física o virtual desde Cober Touch). Validación del afiliado Debe validarse el estado activo del afiliado mediante Traditum Online. Consultas: 0810-222-1122","LINEA 2000, LINEA 2001, LINEA 1000, LINEA 1001, CLASSIC, MAYOR, CMVL00 (CMVL 100), CMVL0P (CMVL 100PLUS), CMVL50 - CMVL5P (CMVL 50 PLUS), CMVLB1, CMVLB2, CMVLB3, CMVLB4, CMVLB7, CMVLPM, CMVLDO, DORADO, FAMILIAS, MEDICOS, INTEGRAL, OSMECON INTEGRAL PLUS, BASICO, GLOBAL, GLOBAL II, GLOBAL IV, GLOBAL V, GLOBAL D, CLASSIC X, OXFORD, FIT, CUSTOM, TAYLORED, WAGON, COBER X, COBERMED, CM SALUD, OSMECON SAN MARTIN","- SJO- COBER - GRAL- COBENSIL SA (COBER)","• DNI y CREDENCIAL DIGITAL","","DEPENDE PLAN","","https://menu.traditum.com/View/Login.aspx","1","1","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","GALENO ARGENTINA SOCIEDAD ANONIMA","","AZUL (NO CORRESPONDE A CG) Y BLANCO","","CREDENCIAL DIGITAL o PLASTICA","A CARGO AFIL","","AFILIADX","","1","1","0","0","0","0","0","1","0","0","1","0","0","0","0","0","0","0","0","0","1"],
+["ACTIVO","GRUPO MP SALUD S.A.","telefono para gestionar derivaciones11-6556-2365//011-5263-2457 coordinacion@c24hs.com.ar","PLAN 1000, SIN COSEGUROS -- PLAN 100, ABONA 100% DEL COSEGURO -- PLAN 500, ABONA 50% DEL COSEGURO","","Credencial de GRUPO MP yDNI, sin excepción.","","DEPENDE PLAN","DEPENDE PLAN","http://gestion.grupompsalud.com.ar:8090","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSALARA - HEMISFERIO","","UNICO - PMO","","","","","","","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSGUIN - O.S.SINDIC. GUINCHEROS Y MAQUINIST.","","PLAN: DIRECTO, MONOTRIBUTISTA, SPS SALUD BASE, SPS SALUD PMI, SPS","","","","","","","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","BINIMED","","SALUX SALUD, PLAN BINIMED","- SJO- BINIMED - Idem de los demás centros, buscarlos por acronimo","","","","","https://binimed.com.ar/credenciales/","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","MEDICALS SA","LOS PLANES ACTIVOS SON ESTOS, LOS VIEJOS YA NO CORREN MÁS, SOLO SON ESTOS: MS PMO - MN PMO M'S2*-MS 100 MS 110 MS 120 - MS 200 CS-BPB-BB-MS 130-MS 210-MS 300 MN 100-MN 210-MN 300 PS 100-PS 200-PS 300","MS PMO - MN PMO M'S2*-MS 100 MS 110 MS 120 - MS 200 CS-BPB-BB-MS 130-MS 210-MS 300 MN 100-MN 210-MN 300 PS 100-PS 200-PS 300","","DNI-CREDENCIAL FISICA O VIRTUAL","","Depende el plan","","","1","1","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","MEDICALS - INTEGRAL PLUS","Solo está en los centros: TALAR, TORCUATO, AVELLANEDA,QUILMES  VARELA, SARMIENTO, MORON. Poseen valores distintos al resto de los planes","INTEGRAL PLUS","","DNI-CREDENCIAL FISICA O VIRTUAL","","","","","0","0","0","1","1","1","1","1","0","1","1","1","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","IMPORTANTE: MEDICALS SA - OSFE","","OSFE","","DNI-CREDENCIAL FISICA O VIRTUAL","","","","","0","0","0","1","1","1","0","1","0","1","1","1","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","IMA SALUD","","• CRISOLMED -- • OSPIC (OBRA SOCIAL DE LA INDUSTRIA DEL CAUCHO) -- • OSPIM (OBRA SOCIAL DEL PERSONAL DE LA INDUSTRIA MADERERA) -- • OSPEP (OBRA SOCIAL DEL PERSONAL DE ESPECTACULO PUBLICO)","","DNI-CREDENCIAL FISICA O VIRTUAL","","","","","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","AMFFA SALUD","Se llama Asociación Mutual de Farmacéuticos Florentino Ameghino","PLAN UNICO","","DNI-CREDENCIAL FISICA O VIRTUAL","","","","","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","BIENESTAR SALUD","","Plan MT 750 y plan RG 750 abonan coseguro -- Plan EC no abonan coseguro","- SJO- BIENESTAR SALUD - CG- BIENESTAR SALUD - GRAL- BIENESTAR SALUD","DNI - CREDENCIA DIGITAL","","A cargo del afiliado","OS","2/06 nuevo validador MICAM . https://micamsalud.com.ar","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","M&C ASOCIADOS S.A.","","PMO y PLATINO","","DNI-CREDENCIAL FISICA O VIRTUAL","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","MYC - CARE SALUD S.A. - NIVEL SALUD","","","","DNI Y CREDENCIAL FISICA/DIGITAL","No abona","DEPENDE PLAN","DEPENDE PLAN","","0","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","RED OMIP S.A. (OSPE)","","","","internación Enviar email a mfparedes@redomip.com.ar con denuncia de internación y validación del plan.","DEPENDE EL PLAN","","VER CUADRO COSEGURO/segun plan","https://www.medicinasur.com.ar/Account/Login","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSSACRA - OS ASOC CIVIL PRO SINDICATO DE AMAS DE CASA DE LA REP ARG","Consultas y practicas de baja complejidad sin autorizacion, media y alta complejidad requieren autorizacion","SOCIAL/PROFESIONAL/CLASICO/TOTAL","","DNI Y CREDENCIAL FISICA/DIGITAL","DEPENDE EL PLAN","DEPENDE PLAN","DEPENDE PLAN","https://servicios.gestos.com.ar/ords19/ossacra19/f?p=230:LOGIN:::::F220_LOGIN_ORG_ID:41","1","0","1","1","1","1","1","1","1","1","1","0","1","0","1","0","0","1","1","1","1"],
+["SUSPENDIDO","ENSALUD SA","PLAN OSPICAL está dado de baja Obra social del HIELO (OSPIHMP) ingresa por Ensalud","","","","DEPENDE PLAN","OS","DEPENDE PLAN","SI","0","1","1","1","1","1","1","1","1","1","1","1","1","0","1","0","1","0","0","0","0"],
+["ACTIVO","SALUD INTEGRAL MEPLIFE SRL","","Plan PMO, CEIBO, ALAMO, CEIBO (Lo ingresan como PLAN UNICO, dado que poseen mismos valores, y mismas caracteristicas, etc)","","DNI Y CREDENCIAL","","","NO TIENE","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","0","0","0","0","0"],
+["ACTIVO","OSPENA - PERSONAL NAVAL","","unico","","DNI Y CREDENCIAL","","","","","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSOETS y LA.R.A. - OBRA SOCIAL, DE OBREROS Y EMPLEADOS TINTOREROS, SOMBREREROS Y LAVADEROS DE LA REPUBLICA ARGENTINA - O.S.O.E.T.S.Y LA.R.A.","Plan 100 hay 2 consultas mensuales sin autorización, mientras que en el Plan 50 todas requieren autorización.","Plan 100 -- Plan 50","","CREDENCIAL PROVISORIA Y DNI","DEPENDE EL PLAN","AUTORIZACION","COSEGURO","https://signomedico.dyndns.org:811/Account/Login?ReturnUrl=%2f","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","0","0","0","0","0"],
+["ACTIVO","STM SALUD","","unico","","dni, credencial","","","","","1","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0"],
+["SUSPENDIDO","SEMBRAR SALUD - ALBA SALUD / TRIPALIUM","","","","PRESTACIONES SIN AUTORIZACIÓN Y SIN COSEGURO • Consultas médicas • Consultas de guardia • Consultas odontológicas • Prácticas de urgencia y emergencia (en guardia) 2) PRESTACIONES SIN AUTORIZACIÓN Y CON COSEGURO•Laboratorio Nomenclado (Ver cuadro de coseguros) •Radiología Nomenclada (Ver cuadro de coseguros) •Prestaciones de baja complejidad (Ver cuadro de coseguros)","DEPENDE EL PLAN","AUTORIZACION","COEGURO","NO","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","ROI SA (DOCTORED)","ROI SA, GERENCIA DOCTORED","TOTAL, 500, 1000, 2000, 3000, OSPESE","","CHEQUEAR","","DEPENDE PLAN","SEGÚN SSS","NO","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","ROI SA (OSPL)","ladrilleros ROISA","","","","","","","","0","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","MODUM S.A (OSDEL)","","","","CUADRO","","AUTORIZACION","COSEGURO","SI","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSETYA - O.S. DE EMPLEADOS TEXTILES Y AFINES","Pedido a través de la página web https://osetya.com.ar/credencial D.CALL CENTER OSETYA, línea gratuita las 24 hs., los 365 días del año al 0800-345-0573","unico","","","DEPENDE EL PLAN","","DEPENDE PLAN","NO","0","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSPIN - O.S.PERSONAL DE LA INDUSTRIA NAVAL","","","","bono sin excepcion o.s","","AFILIADO","AFILIADO","NO","1","0","1","1","1","1","1","1","1","1","1","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","VISITAR SRL","La obligación del afiliado es presentar el pedido médico junto con el bono de práctica y/o consulta que adquirió en la delegación abonando el correspondiente coseguro en caso de corresponder. El Prestador, en dicho caso no deberá cobrarle el coseguro.Autorizaciones: vía mail internaciones@visitar.com.ar A pedido de OSPA (Obra Social del Personal Aeronáutico) para sus planes plata y básicos, a partir del 10/12/2025  se reconocerá por afiliado 2 (dos) consultas mensuales, sea de la misma especialidad o distinta especialidad. A partir de la 3ra consulta del mismo afiliado dentro del mismo mes Visitar no la reconocerá y quedará a cargo del prestador en cobrarle en forma particular la consulta al afiliado.'","AMPAR -- APDIS -- AVALIAN -- APRES -- ASE ASOCIACION CIVIL -- CAMPSIC -- GALENO ARGENTINA SA -- IMP ASSIT SA -- IMP ASSIT PASANTES -- LUIS PASTEUR (PMO) -- MEDICENTER -- OMINT -- OMINT PMO (PRESTACIONES) -- OMINT PMO - CS (PRESTACIONES) -- OPDEA -- OSA -- OSA (VISITAR) -- OSCOMM -- OSDAAP -- OSDEL -- OSDIC -- OSDIPP -- OSDYB -- OSDO -- OSEADI -- OSEDA -- OSEDEIV -- OSETRA -- OSFATUN -- OSFATUN (VISITAR) -- OSFE -- OSFE (VISITAR) -- OSIM -- OSMAD (VISITAR) -- OSME -- OSMITA -- OSMITA (VISITAR MONOTSOCIAL) -- OSPA -- OSPA (VISITAR) -- OSPACA CAPITADO (baja a partir del 28/02/2026) -- OSPACA (baja a partir del 28/02/2026) -- OSPAÑA -- OSPADAAP -- OSPADEP -- OSPATRONES -- OSPEA -- OSPERSAAMS OSCONARA -- OSPERSAAMS OSPEGAP -- OSPIC -- OSPIF (VISITAR MONOTSOCIAL) -- OSPIF (VISITAR) -- OSPILM ( MONOT SOCIAL ) -- OSPILM (LADRILLEROS) -- OSPILM (VISITAR MONOTSOCIAL) -- OSPL -- OSPOCE (ORG DE CONTROL) -- OSPREME (CAPITAS) -- OSPCRA -- OSPETELCO -- OSPUAYE -- OSPYSA -- OSTAD -- OSTEP -- OSUTI -- MOSAISTAS -- PLAN BASICO GLOBAL -- WILLIAM HOPE -- YPF","","DNI Y CREDENCIAL","DEPENDE PLAN","","DEPENDE PLAN","https://odoo.visitar.com.ar/ConsultaAfiliados/","1","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","FORMED - FORTALECER SALUD","Autorizacion a traves del portal MI FORMED + autorizaciones de internacion realizar por autorizaciones@formed. com.ar","Planes MTS Y FS100 REQUIEREN AUTORIZACION PREVIA Y PLANES FS 300, 500 Y 1000: No requieren autorizacion previa.","","DNI-CREDENCIAL FISICA O VIRTUAL","CUBRE APLICACIONES","DEPENDE PLAN","DEPENDE PLAN","https://apligem.activiaweb.com.ar/Site/Salud/01AVerificacionDeAfiliado.aspx?menugroup=3&esp=3 https://portal.formed.com.ar/login","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSAP - ACEROS PARANA","","unico","","DNI, CARNET DIGITAL","","","","","0","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","MEDICINA AL INSTANTE S.A. - VIA SANO MEDITRAT - BAIRES SANITAS - SALUD METROPOLITANA","PLAN OSA y OSPAT, baja 2/10/2025 En el caso de que el validador no funcione comunicarse con Mesa Operativa 0810-362-0777 o mesaoperativa@viasanosalud.com.ar y se deberá adjuntar comprobante de autorización al momento de facturar prestación. MODULADOR ARANCELARIO, CARGADO EN CARPETA 2024","OSMISS, OSTVENDRA, SUPERADOR, OSDEM","","DNI, CARNET DIGITAL","DEPENDE EL PLAN","OS","SI","https://validador-clinicas.viasanosalud.com.ar/","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","DASMI","DIRECCION ASISTENCIA SOCIAL Y MEDICA INTEGRAL UNIVERSIDAD NACIONAL DE LUJAN","unico","","","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","BALRO SALUD SA - CELIUS SALUD","BALRO gerenciadora de CELIUS SALUD","UNICO","- SJO- CELIUS - GRAL- BALRO SALUD (CELIUS SALUD) - CG- CELIUS","PRESENTAR DNI, CARNET CONSULTAS/PRACTICAS POR GUARDIA: SIN AUTORIZACION y SIN COSEGURO AMBULATORIOS: COSEGUROS Y AUTORIZACIONES CONSULTAS/PRÁCTICAS QUE NO PAGAN COSEGURO (EN ESTOS CASOS SOLAMENTE, LA OBRA SOCIAL PAGA TAMBIÉN EL APB) PACIENTES CON DISCAPACIDAD (CUANDO LA CONSULTA ES INHERENTE AL DIAGNOSTICO) PLAN PMI (TOCOGINECÓLOGO, NEONATOLOGÍA, PEDIATRIA) PACIENTES ONCOLÓGICOS CONSULTAS SIN AUTORIZACION CLINICO PEDIATRA TOCOGINECOLOGO ALERGISTA CARDIOLOGIA DERMATOLOGIA DEABETOLOGIA ENDOCRINOLOGIA FLEBOLOGIA GASTROENTEROLOGIA NEUMONOLOGIA NEUROLOGIA ODONTOLOGIA OLFTALMOLOGIA OTORRINOLARINGOLOGIA UROLOGIA NUTRICIONISTA TRAUMATOLOGIA","","CON AUTORIZACION","","","0","1","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","ETICA MEDICA (ETICA +) - SOCIAL MEDICA - ETICA SALUD","","","","","NO","A CARGO DEL AFILIADO","NO","SI","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","O. S. TRABAJ. DE LA CARNE Y AFIN. R - OSTCARA","","rel de dependencia y monotributo","","PRESENTAR ORDEN DE CONSULTA, CARNET AFILIADO DIGITAL / PROVISORIO","","","","NO","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","0","0","0","0","0"],
+["ACTIVO","DX MEDICALSALUD","","PLAN PMO","","","","","","","1","0","1","1","1","1","1","1","1","1","1","1","1","0","1","1","0","1","1","1","0"],
+["ACTIVO","CENTRAL HEALTH SA - SALUD CENTRAL","","30,50 70, 90 y 110","GRAL- SALUD CENTRAL (CENTRAL HEALTH)","PRESENTA CARNET DIGITAL/PROVISORIO, DNI y ORDEN MÉDICA","","CON AUTORIZACION","ABONA","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPEP - O.S. PERSONAL PANADERIAS","EL VALOR DEL COSEGURO, LA OS LO ENVÍA DENTRO DEL TARIFARIO","PLAN UNICO","","","","","","NO","0","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","CONEXION SALUD S.R.L.","Conexión Salud es una gerenciadora de Obras Sociales que organiza su gestión a través de distintos planes, discriminados según lo indicado en la columna correspondiente. Actualmente, brinda servicios a las siguientes Obras Sociales: OSEAM OSPEP OSADRA OSCANGRYLP OSCOEMA ASPEE OSPEJ MTT Cabe destacar que OSDOP se encuentra incluida dentro de la operatoria, aunque presenta normativas específicas y diferentes al resto de las obras mencionadas.) OSDOP, A PARTIR DE FEBRERO ENTRA DIRECTO.","'• INTEGRADOR -- • INTEGRADOR PLUS -- • SUPERADOR -- • PLAN SUMA -- • PLAN OSPEP -- • PLAN OSADRA","","CREDENCIAL DIGITAL O PLASTICA, DNI","","AUTORIZACION","SI","PENDIENTE","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","1","1","1","0"],
+["ACTIVO","OSPFESIQYP - OS PERSONAL DE LA FED DE SIND DE LA IND QU Y PETROQ","La vigencia del afiliado debe verificarse siempre desde la app (se actualiza diariamente). • No se enviarán más padrones, ni se cargan en el ENLACE • En la facturación se debe detallar a qué plan pertenece cada afiliado. • Ante falta de credencial virtual, el paciente deberá gestionarla desde la app antes de la atención. • Recordar que los beneficios de exención de coseguro solo aplican si el afiliado presenta la documentación respaldatoria.","Plan A (Único A) -- Plan Único -- Plan B (Monotributistas y Desempleo)","","OBLIGATORIO PARA TODOS LOS PLANES - Credencial virtual desde la app No aceptar fotocopias, No solicitar copia de la credencial CASOS ESPECIALES (Exentos de coseguro) Los afiliados con estas condiciones deben presentar: Discapacidad Oncología PMI Prenatal HIV Deben presentar: Planilla de empadronamiento o Certificado Único de Discapacidad (CUD)","DEPENDE EL PLAN","","","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","1","0","0","0","0","0"],
+["ACTIVO","BRINDAR SALUD","OSPSIP, no va MÁS CON BRINDAR","100, 300 y PERFUMISTAS","- SJO- BRINDAR SALUD - BRINDAR SALUD SA - CG- BRINDAR SALUD","DNI, CREDENCIAL","DEPENDE EL PLAN","AUTORIZACION","SI","NO","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","1","1","1","1","1","1"],
+["SUSPENDIDO","OSPMA - O.S.EMPLEADOS MUNICIPALIDAD DE AVELLANEDA","","","","PRECENTAR DNI,CARNET Y3 ULTIMOS RECIBOS DE SUELDO","SI","SI","SI","","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSPIF - OBRA SOCIAL DEL PERSONAL IND DEL FOSFORO","","","","","SI","SI","DEPENDE PLAN","P","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","I SALUD SRL","DERIVACIONES SOLO PUEDEN SERGESTIONADAS/SOLICITADAS POR ISALUD O EN SU DEFECTO POR OSTV U OSAMOC AUTORIZADOS POR ISALUD NO SE RECONOCERAN DERIVACIONES QUE NO HAYAN SIDO SOLICITADAS POR ISALUD ADMISIÓN: Para acceder a las prestaciones del PMO, los beneficiarios de las Obras Sociales presentar: Credencial de la Obra Social al día ( debe observarse fecha de vigencia ), D.N.I. y en casos de no poder verificar alta en sistema, Ultimo Recibo de Sueldo.","AMIS -- AVRIL ASSISTANCE -- MEPLIFE -- OSAMOC -- OSPIC (CAUCHO - MODUM SA) -- OSTV (TRAB. VIALES) -- SALUD CENTRAL -- EUROLIFE PLAN VERDE -- EUROLIFE PLAN ORO 365 -- EUROLIFE PLAN ORO 730 -- EUROLIFE PLAN ORO 820","","","","","","","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","UTA","ZARATE y CAMPANA","","","","","","","","0","0","0","0","0","0","0","0","1","0","0","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","GRUPO DBP - BUEN PASTOR (BAYRES PLAN)","Los planes están discriminados por COLOR y por NÚMERO. EJEMPLO: PLAN BAYRES AZUL (OSCEARA) en SC, deben ingresarlo solo AZUL.","AZUL BAYRES -- AZUL BAYRES (OSCEARA) -- AZUL BAYRES (OSPEJANA) -- AZUL BAYRES (OSTEYA) -- AZUL BAYRES (OSPDICA) -- PLAN AZUL MONOTRIBUTO -- AZUL BAYRES 'A' (OSCEARA) -- AZUL BAYRES 'A' (OSPEJANA) -- AZUL BAYRES 'A' (OSTEYA) -- AZUL BAYRES 'A' (OSPDICA) -- BLANCO BAYRES -- BLANCO BAYRES (OSCEARA) -- BLANCO BAYRES (OSPEJANA) -- BLANCO BAYRES (OSTEYA) -- BLANCO BAYRES (OSPDICA) -- PLAN MATERNAL INFANTIL -- PLANES NUMÉRICOS -- 5000 - COMPLEMENTARIO ABIERTO CON COSEGURO -- 5100 - COMPLEMENTARIO ABIERTO SIN COSEGURO -- 4000 - INTEGRAL ABIERTO CON COSEGURO -- 4100 - INTEGRAL ABIERTO SIN COSEGURO -- 2000 - COMPLEMENTARIO CERRADO CON COSEGURO -- 2100 - COMPLEMENTARIO CERRADO SIN COSEGURO -- 1000 - INTEGRAL CERRADO CON COSEGURO -- 1100 - INTEGRAL CERRADO SIN COSEGURO -- 7102 - COMPLEMENTARIO MAYOR CERRADO SIN COSEGURO -- 100 - JOVEN INTEGRAL SIN MATERNIDAD CERRADO SIN COSEGURO -- 4100 - JOVEN INTEGRAL SIN MATERNIDAD ABIERTO SIN COSEGURO -- 3100 - INTEGRAL ESTÉTICA -- 8100 - COMPLEMENTARIO MY Y AC CERRADO SIN COSEGURO -- 7500 - INTEGRAL MAYOR CERRADO SIN COSEGURO -- 7000 - PLAN INTEGRAL MAYOR ABIERTO SIN COSEGURO","","","DEPENDE PLAN","","DEPENDE PLAN","www.bayres.bymovi.com","1","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","FLEX SALUD","","En San Jose Plena Salud","","","","","","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSFE - FERROVIARIA","• VA COMO OSFE DIRECTO • MEDICALS, está prestando la CREDENCIAL (NO INGRESA POR MEDICALS) • SE ESTÁ GESTIONANDO UN PADRÓN (07/11/2025), SE ESTA GESTIONANDO CAPITA DE LEAL (AUN NO CREADA EN SC), ENTRA POR GRAL- OSFE","NO PLAN MONOTRIBUTO (Ingresa por Iter medicina)","","DNI Y CREDENCIAL","","","NO","SI","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPSIP - Obra social de seguridad comercial industrial e investigraciones privadas","","UNICO","- SJO- OSPSIP (SEGURIDAD E INVESTIGACION PRIVADA)","DNI+ CREDENCIAL + ULTIMO RECIBO DE HABERES DEL TITULAR O COMPROBANTE DEL MONOTRIBUTO","","","DEPENDE PLAN","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPA - O.S.PORTUARIOS ARGENTINOS","","","","","","","","","0","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSMITA","","","","","","","","","0","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","O.S.EMPLEADOS DE COMERCIO Y ACT-OSECAC","","","","","CUBRE APLICACIONES","NO","NO","SI","0","0","1","1","1","1","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSEPJANA","SOLO SARMIENTO DIRECTO","'Blanco -- ASI 100 -- ASI 200 -- ASI 250 -- ASI 300 -- ASI 350 -- ASI 350 P -- ASI 400 -- ASI 450 -- Exclusive'","SAR - OSEPJANA","","","","","","0","1","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","1"],
+["SUSPENDIDO","Assistencial salud","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ASI - ASISTENCIA SANITARIA INTEGRAL","GERENCIA OSEPJANA","Blanco -- ASI 100 -- ASI 200 -- ASI 250 -- ASI 300 -- ASI 350 -- ASI 350 P -- ASI 400 -- ASI 450 -- Exclusive","GRAL- ASISTENCIA SANITARIA INTEGRAL","","","","","https://validador.asi.com.ar","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","IOMA - INSTITUTO DE OBRA MEDICO ASISTENCIA","En QUILMES unicamente atención por guardia","","","PRESENTAR FOTOCP/CARNET/DNI","DEPENDE PLAN","","ABONAN EN LA AUTORIZACION","NO","0","0","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","BRISTOL PARK S.A","OSPEC Todas las consultas dentro de PMO pueden atenderse libremente, sin derivación, ni autorización por parte Bristol Park SA. OSUTHGRA Las consultas básicas (VER NORMAS), son de acceso directo. Las consultas No básicas requieren derivación médica, y no requieren autorización previa de Bristol Park. OSTEL","OSUTHGRA - OSPEC - (PLAN OSPSIP YA NO ES MAS DE BRISTOL) - OSTEL","","DNI / CARNET","","SI","DEPENDE PLAN","","0","0","0","0","0","0","0","1","1","0","1","0","1","0","1","1","1","0","0","0","0"],
+["ACTIVO","GRUPO D.D.M. S.A. - PREMEDIC","","Plan PMO, 100 y 200 (abona copago) -- Plan 300, 400, 500 (NO abona)","- SJO- GRUPO PREMEDIC - GRUPO DDM SA - Idem, resto de los sanatorios por acronimo","CREDENCIAL FISICA/VIRTUAL","","","DEPENDE PLAN","SI","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","SALUD PROFESIONAL Y TECNOLOGICA S.A / EX COBERTEC","","PLAN ORO, PLATA, OSDEPYB, OSPM (MOSAISTAS)","","DNI .CARNET.RECIBO","CHEQUEAR PLAN","CONSULTAS NO REQUIERE","AFILIADX","NO","0","1","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSPIA OS PERSONAL DE LA INDUSTRIA ALIMENTICIA","","","","DNI .CARNET.RECIBO","POR GUARDIA NO AABONA","REQUIERE AUTORIZACION","AFILIADX","NO","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSTEFC - Obra social de Tecnicos de Futbol","","","","DNI .CARNET.RECIBO","NO ABONA POR GUARDIA","AUTORIZACION","AFILIADX","NO","1","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSUOMRA","","","","DNI .CARNET.RECIBO","POR GUARDIA NO AABONA","VER PLAN","AFILIADX","NO","1","0","1","1","1","1","1","1","1","1","1","0","0","0","1","1","1","1","1","1","1"],
+["ACTIVO","OSPFESQYP QUIMICOS Y PETROQUIMICOS","Planes y coberturas: Plan A (Único): paga coseguro y APB según grilla. Plan A (Único A): no paga coseguro ni APB. Plan B (Monotributistas y Desempleo): paga consulta completa según grilla (sin coseguro de consulta). APB: lo abonan los afiliados directamente, no se factura a la obra social.","• PLAN UNICO, PLAN A Y PLAN B(MONOTRIBUTISTAS)","","","","","","","0","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSDEPYM","PLAN 800 A PESAR DE APARECER EN LA TABLA DE COSEGUROS, NO TIENE VIGENCIA","• PLAN, 1000, 2000, 2500, Staff, 3000, -- 4000 y Personal","","• CREDENCIAL VIRTUAL O FISICA, MODELOS CARGADOS EN EL ENLACE • DNI","EN PROCESO","A CARGO DEL AFILIADO EN TODOS LOS PLANES","DEPENDE PLAN","https://www.osdepym.com.ar/cas/login?service=http://www.osdepym.com.ar/prestadores-/shiro-cas&custowebmViewParam=prestadorWeb","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","1","1","0","1","1"],
+["ACTIVO","AVALIAN","","PLAN AS500 - PLAN AS400 - PLAN AS300 - PLAN AS200 - PLAN AS204 - PLAN AS100","- SJO- AVALIAN - GRAL- AVALIAN","DNI-CARNET-","SEGUN PLAN","no","ABONA COSEGURO SEGUN PLAN","https://apligem.activiaweb.com.ar/Login.aspx?ReturnUrl=%2f","1","1","0","0","1","1","0","0","1","0","1","1","0","0","0","0","0","0","0","0","1"],
+["ACTIVO","LEAL MEDICA","El afiliado debe presentarse en el prestador, con la credencial de LEAL MEDICA y el documento nacional de identidad, sin excepción. El Prestador deberá chequear la vigencia del afiliado ingresando a nuestro Sistema de Validación y/o solicitando al paciente la credencial OnLine emitida desde el siguiente Link, htps://lealmedicaapp.bpay.com.ar la cual tiene una vigencia de 24 horas.","OSPAP (Perfumistas) por Leal Medica / PLAN 100 - 150 -500 / 500 GO - 1500 - GO","- SJO- LEAL MEDICA - CG- LEAL MEDICA - LEAL MEDICA (para el resto de los centros)","DNI, CREDENCIAL DIGITAL","","","DEPENDE PLAN","htps://lealmedicaapp.bpay.com.ar","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","1","1","1","1","0"],
+["ACTIVO","LEAL MEDICA - OSFE GO","El afiliado debe presentarse en el prestador, con la credencial de LEAL MEDICA y el documento nacional de identidad, sin excepción. El Prestador deberá chequear la vigencia del afiliado ingresando a nuestro Sistema de Validación y/o solicitando al paciente la credencial OnLine emitida desde el siguiente Link, htps://lealmedicaapp.bpay.com.ar la cual tiene una vigencia de 24 horas. (EN SAN JOSE SOLO DERIVADOS)","PLAN OSFE GO","- SJO- LEAL MEDICA - CG- LEAL MEDICA - LEAL MEDICA (para el resto de los centros)","DNI, CREDENCIAL DIGITAL","","","DEPENDE PLAN","htps://lealmedicaapp.bpay.com.ar","0","1","1","1","0","1","0","1","0","0","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CASA - SISTEMA ASISTENCIAL DE CAJA DE ABOGADOS","","lunes a viernes de 8 a 17 hs. Y las solicitudes de autorización podrán efectuarse a través de la línea gratuita de CASA 0800-222-2272, por fax al mismo número, a través del correo electrónico autorizacionescasa@cajaabogados.org.ar, WhatsApp o APP de CASA.","","","CUBRE APLICACIONES","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CAJA DE SERVICIOS SOCIALES PRO.STA. CRUZ","","","","","","","","","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSEP - OS EMPLEADOS PUBLICOS DE MENDOZA","","","","PENDIENTE","","","","","0","0","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","OSPELSYM - OS PERSONAL DE EMPRESAS DE LIMPIEZA, SERVICIOS Y MAESTRANZA","","","","PENDIENTE","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","MEDIMAS","En la atención por guardia no deberá cobrarse ningún tipo de coseguro. ü Las prestaciones realizadas en la atención por guardia se facturarán con las órdenes emitidas por el validador donde se especificará que la atención fue por guardia, el horario y el diagnóstico que justifique la urgencia. ü Toda medicación suministrada, como así también los actos bioquimicos que se efectúen en la atención por guardia deberán facturarse a la obra social.","PLAN 100, PLAN 200 Y PLAN 300","","CREDENCIAL DIGITAL y DNI","","","","","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","1","1","1","1"],
+["SUSPENDIDO","ANDAR - OSVVRA","","","","dni carnet recibo +NORMAS QUE FIGURAN EN TRIPALIUM DENTRO DEL EXCEL","segun plan","autorizacion","abona segun plan","si","1","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","BIOMED","• TODOS LOS PLANES ABONAN EL APB","• PLANES MT (ABONA COSEGURO) -- • RD BASICO (ABONA COSEGURO) -- • RD SUPERIOR","- SJO- BIOMED - CG- BIOMED - Idem, el resto de los centros, buscarlos por acronimo.","• Credencial GRUPO BIOMED (según modelos): podrá ser física o digital • Documento de Identidad. • No es obligatorio recibo de sueldo","","TODOS LOS PLANES ABONAN EL APB","PLAN MT MONOTRIBUTO Y PLAN RD BASICO: se deberá cobrar los coseguros, los mismos saldran a travez de AUTORIZAME, el resultante del mismo se deducirá de la facturación mensual.PLAN RD SUPERIOR: No abona coseguro para ninguna de las especialidades, excepcion odontología.","https://app.autorizame.com.ar/","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","UTEPLIM","El afiliado presentará: ● Credencial digital o física actualizada. ● Documento de identidad ● Orden de consulta y/o autorización (para prácticas ambulatorias) UTEPLIM con las siguientes VÍAS DE COMUNICACIÓN EXCLUSIVAS PARA PRESTADORES: Consultas generales: Teléfono: 0800 3450 861 Atención de lunes a viernes de 10hs a 16hs. Oficina Central : Hipolito Yrigoyen 1180 Buenos Aires - CABA AUDITORÍAS/INTERNACIÓN: autorizaciones@uteplim.com.ar, melina.oviedo@uteplim.com.ar, camila.aranda@uteplim.com.ar FACTURACIÓN/ ACTUALIZACIÓN ARANCELARIA: facturacionba@uteplim.com.ar, melina.oviedo@uteplim.com.ar CONVENIOS/CARTILLAS: conveniosba@uteplim.com.ar, lucas.godoy@uteplim.com.ar AFILIACIONES: afiliaciones@uteplim.com.ar , daniel.mansilla@uteplim.com.ar , lucas.godoy@uteplim.com.ar","PLAN UNICO","","dni carnet recibo","GUARDIA NO ABONA","autorizacion","ABONA","no tiene hasta enero 2026","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","SCIS MEDICINA PRIVADA S.A.","Scis Medicina Privada cuenta con una Credencial Virtual de Identificación Única para sus asociados. Esta credencial identifica al Asociado con sus datos personales, tipo de plan, numero de afiliado, fecha de vencimiento y condición ante el IVA. LA CREDENCIAL DE SCIS, puede decir: OSDEPYM, OSTRAC, OSPESCA, OSSIMRA, OSPACA, OSFENTOS, OSUTI, ASSPE, OSPOCE pero DEBEN GUIARSE POR EL NUMERO DEL PLAN","PLANES BASICOS: SC50, SC100, SC150 -- PLANES INTERMEDIOS: SC250, SC300 -- PLANES INTEGRALES: SC500, SC600, SC4000","","dni carnet recibo TOKEN, QR El Token cuenta con una duración limitada. Si la transacción no resultara autorizada devolviendo el mensaje Token Vencido, el asociado deberá refrescar o volver a consultar su credencial, e informarle el nuevo código para repetir el ingreso de la prestación.","GUARDIA NO ABONA","SEGUN PLAN","SEGÚN VALIDADOR","http://validador.scisonline.com.ar:81/ca_scis_prod/index.php","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","IGUALDAD SALUD OSVARA","REQUISITOS PARA LA ATENCION IDENTIFICACION DEL AFILIADO Para la atención de todo procedimiento (Ambulatorio o de Internación) el afiliado deberá presentar: CREDENCIAL PROVISORIA: valida por 60 días al momento del alta del afiliado o en casos excepcionalescorroborar fecha de vencimiento de la misma Credencial provisoria y Documento de identidad CREDENCIAL VIRTUAL: única vigente para la atención medica Credencial virtual y Documento de identidad El prestador podrá validar la afiliación de nuestros afiliados a través del sistema de validación WebPos(ver instructivo) ÚNICO PLAN VIGENTE: PLAN PMO PLAN OBLIGATORIO: PLAN PMI ( Plan Materno Infantil ), madre y recién nacido","PLAN PMO, va con coseg","GRAL- IGUALDAD SALUD (PATRON 2020)","dni carnet recibo","GUARDIA NO ABONA","SI LO QUIERE EL CASO","AMB.AFILIADOS SI Y GUARDIA NO ABONA","https://validaciones.igualdadsalud.com.ar/","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPIC - OS INDUSTRIA CINEMATOGRAFICA","","CINE, BENEFICIARIO, BENEFICIARIO MCA, PLAN MCA SICA, PLAN MCA","","CREDENCIAL DIGITAL y DNI","GUARDIA NO ABONA","SIN AUTORIZACION","ABONA","SI /CONSULTA Y GUARDIA","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OBRA SOCIAL ASOCIACION MUTUAL DE LOS OBREROS CATOLICOS PADRE FEDERICO GROTE - OSAMOC","","Amarillo (con coseg) -- Gris (con coseg) -- Naranja (con coseg) -- Verde (sin coseg) -- Salud Sanatorio San José (sin coseg) -- Verde Marroquineros (con coseg) -- Senderos (con coseg)","- SJO- OSAMOC MUTUAL DE LOS OBREROS CATOLICOS ADULTOS - CG- OSAMOC, Idem el resto de los sanatorios.","DNI CARNET RECIBO","SEGUN PLAN","","https://osamoc.com.ar/img/Copagos/copagos.pdf","https://www.osamoc.com.ar/","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","PROGRAMAS MEDICOS","","","","","","","","","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","CEDIAC","","","","DNI CARNET RECIBO","SEGUN PLAN","ORDEN Y AUTORIZACION","ABONA","NO","0","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSPRERA - Obra Social del Personal Rural y Estibadores de la República Argentina","","","SJO- OSPRERA (OS DEL PERSONAL RURAL Y ESTIBADORES DE LA REP. ARG)","PENDIENTE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSPIDA -Obra social del personal de imprentas diarios y afines","","unico","","DNI CARNET RECIBO","NO ABONA","","BONO CONSULTA","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","1","1","0","1","0"],
+["ACTIVO","MEDICUS SA DE ASIST MED Y CIENTIFIC","","AZUL -- AZUL GALICIA -- AZUL PEUGEOT - CITROEN -- AZUL FORD -- AZUL SIEMENS -- AZUL LEGISLATURA -- AZUL MAXICONSUMO -- AZUL MAROLIO -- CELESTE -- CELESTE GALICIA -- CELESTE PEUGEOT - CITROEN -- CELESTE MAXICONSUMO -- CELESTE MAROLIO -- BLANCA -- GRIS CORPORATE -- FAMILY FLEX -- ADV -- MC INTEGRA FLEX -- MZ ZONAL PEUGEOT -- INTEGRA 2 -- CENTROS (CM) -- MET -- MIROT -- MC INTEGRA","- SJO- MEDICUS - CG- MEDICUS - SAR- MEDICUS SA DE ASIST MED Y CIENTIFICA","DNI CARNET RECIBO","SEGUN PLAN","NO DICE NADA","COSEGURO","SI","1","1","0","0","0","0","0","0","0","0","1","0","1","0","0","0","0","0","0","0","1"],
+["ACTIVO","MUTUAL CENTRO GALLEGO","","","","","","","","","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPTV- OBRA SOCIAL DEL PERSONAL DE TELEVISION","Los siguientes PLANES TV SALUD están habilitados para la atención en vuestra Institución: • 400 • SAT 1001 Los siguientes Planes TV Salud, podrán ser atendidos únicamente con expresa autorización / derivación por parte de la Obra Social: Plan 100 / 200 / 300 / SAT / OSPTV / JOST / JOSTM / JSAT / JSATM Importante: al momento de la atención, no corresponde el cobro de ningún tipo de coseguro por parte del prestador, para ninguno de los planes.","SAT 1001 Y 400","","DNI CARNET RECIBO","NO ABONA","NO LO INCICA","BONO CONSULTA","SI","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","ASSPE SALUD","PLAN 100 Y 200 ABONA COSEGURO, PLAN 300 NO ABONA","• PLANES 100, 200 y 300","- SJO- ASSPE SALUD - CG- ASSPE SALUD - GRAL - ASSPE SALUD","DNI, CREDENCIAL DIGITAL","","","DEPENDE PLAN","AutorizaME","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","FIDEI SALUD (OSCEP)","","ATUEL, LACAR, PUELO","","DNI, CREDENCIAL DIGITAL","","","","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","1","1","1","1","1"],
+["ACTIVO","FIDEI SALUD (OSSDEB)","","ATUEL, LACAR, PUELO","","DNI, CREDENCIAL DIGITAL","","","","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","1","1","1","1","1"],
+["ACTIVO","OSPROTURA","","MONOTRIBUTISTA (CREDENCIAL VERDE) y GENERAL (CREDENCIAL AZUL o BLANCA)","","DNI, CREDENCIAL DIGITAL o FISICA","","A cargo del AFILIADO","","","1","0","0","0","1","1","1","1","0","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","O.S.PERS.IND.QUIMICA Y PETROQ. - OSPIQYP","","• QUIMICOS, • NO QUIMICOS, • MONOTRIBUTISTA","","DNI CARNET RECIBO","NO ABONA","SI ABONA","SI","CYGNUS","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","CONURBANO SALUD S.A. (OSEAM)","","(Ingresa tambien por Diagnos med o Principal plan )","","DNI CARNET RECIBO","NO ABONA","NO LO INCICA","","","1","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSOCNA - O.S. DE COMISARIOS NAVALES","","","","DNI CARNET CREDENCIAL DE LA OBRA SOCIAL","SEGUN PLAN","NO DICE NADA","COSEGURO /AUTORIZA","NO","0","0","0","0","0","0","0","1","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","GERDANNA","NO TIENE CONVENIDO GUARDIA","","","DNI CARNET RECIBO","NO ABONA","ABONA","COSEGURO","NO","0","0","1","1","1","1","1","1","1","1","1","1","1","0","1","1","1","1","0","1","0"],
+["ACTIVO","OSADEF - O.S. ASOC DE EMP. DE FARMACIA","","","","","","","","","1","1","0","0","0","0","0","1","0","0","1","1","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","GILSA S.R.L. (INTEGRAL SALUD)","","","","No figura en las normas operativas","PENDIENTE","PENDIENTE","PENDIENTE","PENDIENTE","0","0","1","1","1","1","1","1","1","0","0","0","0","0","1","0","0","1","1","1","1"],
+["ACTIVO","HOSPITAL PRIV. NTRA. SRA. DE LA MERCED S.A","Gerencia a O.S. PERSONAL DE MAESTRANZA - OSPM","","","","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPM MOSAISTAS","","","","No figura en las normas operativas","PENDIENTE","PENDIENTE","PENDIENTE","PENDIENTE","0","0","1","1","0","0","1","1","0","0","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","SAMI - OSMECON","","PRAXIS INTEGRAL -- GENESIS INTEGRAL -- TEKNE INTEGRAL -- NOVO INTEGRAL -- JOVEN INTEGRAL -- JOVEN 30/40 -- ORIGEN -- PERTENECER INTEGRAL -- EXTRA INTEGRAL -- PREMIUM INTEGRAL -- OSMECON MEDICOS","GRAL - SAMI OSMECON","","","","","","0","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPATCA - OS DEL PERSONAL ADMINISTRATIVO Y TECNICO DE LA CONTRUCCION Y AFINES","","OPCIÓN / MONOTRIBUTO - OBLIGATORIO","","","","","","","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPIP - Obra Social del Personal de la Industria Plástica","https://aplicaciones.uoyep.org.ar/webapp/#registro_popup","","","","","","","https://apps.uoyep.org.ar/sim/index.php","0","0","0","0","1","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSBLYCA","","","","","","","","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","O.SOCIAL CONDUCTORES DE REMISES Y AUTOS AL INSTANTE Y AFINES - OSCRAIA","AMBULATORIO E INTERNACIÓN VERIFICACIÓN DE AFILIACIÓN EL BENEFICIARIO DEBE CONCURRIR INDEFECTIBLEMENTE CON LA SIGUIENTE DOCUMENTACIÓN PARA CUALQUIER TIPO DE PRESTACIÓN:  BONO DE CONSULTA AUTORIZADA POR LA OBRA SOCIAL.  CREDENCIAL DE LA OBRA SOCIAL VIGENTE (ANEXO I).  DOCUMENTO DE IDENTIDAD.  ACLARACIÓN: TODO AQUEL BENEFICIARIO QUE CUMPLA CON LO ANTES MENCIONADO DEBERÁ RECIBIR LA COBERTURA DEL PLAN MÉDICO OBLIGATORIO (P.M.O.) SIN EXCEPCIÓN.  AFILIADO CATEGORÍA BAJO RELACIÓN DE DEPENDENCIA DEBE PRESENTAR ULTIMO RECIBO DE SUELDO  AFILIADO CATEGORÍA MONOTRIBUTISTAS DEBERÁ PRESENTAR LOS ÚLTIMOS TRES PAGOS DE SU MONOTRIBUTO","RELACIÓN DE DEPENDENCIA, MONOTRIBUTO","","","","","","","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","1","1","1","0"],
+["ACTIVO","SALUDCOOP SA","","","","","","","","","1","0","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","TALAR","","","","","","","","","1","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CARDINAL ASSISTANCE","","","","","","","","","1","0","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","FAMILY GROUP","Classic: paga 100%. Classic Plus, 991, 992, 993, Premium, FG530, sSc230: copago fijo. Premium Plus 250/450, sSc430: sin copago.. TODAS LAS PRACRICAS MEDICAS REQUIEREN AUTORIZACION PREVIA PARA SU REALIZACION A partir de enero de 2026 entra en vigencia el Validador de Prestaciones como sistema obligatorio para la totalidad de las atenciones. El sistema determinará automáticamente cobertura, topes, rechazos y la necesidad de autorización en sede. Las prácticas de alta complejidad o con condiciones particulares podrán requerir auditoría médica o administrativa previa.","Plan Classic, Plan Classic Plus, Plan -- Premium, Premium Plus 250, Premium Plus 450 y Premium Plus 750","","EL SOCIO DEBERA PRESENTAR 1) La identificación del afiliado se realizará exclusivamente mediante credencial digital y token activo disponibles en la aplicación oficial. 2) DNI 3) CUPON DE PAGO O FACTURA (EL COMPROBANTE DE PAGO DEL MES ANTERIOR ES VÁLIDO HASTA EL 15 DEL MES SIGUIENTE) 4) VALIDAR CONSULTAS EN SISTEMA: El sistema determinará automáticamente cobertura, topes, rechazos y la necesidad de autorización en sede.","A CARGO AFIL","A CARGO AFIL","DEPENDE PLAN","https://app.autorizame.com.ar/AutorizaMe/com.autorizame.login","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ITER MEDICINA S.A. (OSPACA-OSAM)","OSFE MONOTRIBUTO ENTRA POR ITER MEDICINA PARA TODAS LAS CLÍNICAS","","","","","","","https://iter26.dynu.com/ITERValidador","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","MEDICENTER - proteccion medica integral","","JUNIOR PLUS -- GAMA I -- GENESIS I -- GENESIS II -- BLANCO -- QUALITY -- PREMIUM PLUS -- OMEGA PLUS","","DNI y CARNET FISICO/DIGITAL/PROVISORIO","","DEBE SER FACTURADO","DEPENDE PLAN","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","1","1","1","1","1","1","0"],
+["SUSPENDIDO","SALUD INDUSTRIAL S.A. (O.S.Pe.Ga.P)","","","","","","","","","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","GLOBAL EMPRESARIA","El Autorizador Online validará el monto a cobrar para HIV, Oncología, Discapacidad, Plan Materno, Plan Infantil y otras coberturas especiales, estableciendo un monto de $0 cuando corresponda.","Marítimos, Jubilados, Plan D y Plan M, OSTEP -- M","","DNI, credencial digital y autorización","","","DEPENDE PLAN","http://190.136.50.221/Account/Login?ReturnUrl=%2f","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","1","0","0","0","0"],
+["SUSPENDIDO","FADMED S.A. (FADMEDICAL S.A.)","","","","Se solicitara AUTORIZACION para cada practica y consulta medica. En caso de GUARDIA, sin autorización y con credencial al dia","","","DEPENDE PLAN","","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPECA - CAUCHO","","","","","","","","","1","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CPN-CERAMISTAS","","","","","","","","","1","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSCI - CORTADORES DE INDUMENTARIA - OSUCI","La Obra Social Cortadores de la Indumentaria informa que entra en vigencia el CARNET DIGITAL DE AFILIACIÓN. Tiene la misma validez que el carnet físico. El afiliado puede mostrarlo desde su celular. Durante el período de transición conviven ambos formatos (digital y físico). El personal de admisión debe: Aceptar el carnet digital. Verificar datos y vigencia junto con el DNI.","UNICO","","DNI, credencial, autorización, recibo de sueldo y orden médica.","","","NO ABONA","","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSFATUN","Para la atención en los prestadores, el beneficiario debe concurrir con la siguiente documentación para cualquier tipo de prestación:  Credencial de la obra social vigente, en su formato físico o digital desde la APP.  Documento de identidad  Orden de autorización emitida por la obra social para el caso de las consultas.  Orden médica y de autorización en caso de prestaciones programadas.  En caso de atención por guardia con la presentación de DNI y credencial vigente es válido para la atención. En la presente se especifica el procedimiento puntual para los tipos de prestaciones que pudieran realizarse.","PMO, BASICO, INTEGRAL, PREMIUM, NO DOCENTE, DOCENTE, UNI 1000, UNI 2000, UNI 3000, UNI 4000","","Credencial fisica o digital, dni","","","","https://autorizador.osfatun.com.ar/","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSCAMGLYP","Gerenciada por SANAR SALUD","","","","","","","","0","0","1","1","1","1","1","0","1","1","0","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSEMM - OBRA SOCIAL DE EMPLEADOS DE LA MARINA MERCANTE","","","","","","","","","0","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ISALUD","Sin autorizacion: olo para Consulta Médica Programada y Atención por Guardia o Demanda Espontánea El resto con autorizacion que tiene vigencia de 30 dias - Incluye 6 consultas mensuales y hasta 3 por mes con un mismo profesional.","","","ara acceder a las prestaciones del PMO, los beneficiarios de las Obras Sociales presentar:Credencial de la Obra Social al día ( debe observarse fecha de vigencia ), D.N.I. y en casos de no poder verificar alta en sistema, Ultimo Recibo de Sueldo.","","DEPENDE PLAN","DEPENDE PLAN","","0","0","1","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","WILLIAM HOPE","","","","practica CITOBRUSH y/o CEPILLADO ENDOCERVICAL ,NO requiere autorización","","","","","0","0","0","0","0","0","0","1","1","0","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","HEALTH MEDICAL- OSSIMRA - OBRA SOCIAL DE LOS SUPERVISORES DE LA INDUSTRIA METALMECÁNICA","","","","","","","","","1","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","HEALTH MEDIC","","","","","","","","","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","SCIENTIS","","","","","","","","","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSRJA - obra social de los relojeros","Para acceder a los servicios, los afiliados deberán presentar: ● Credenciales: Celeste, Verde, Oro y Platino, según corresponda a la categoría indicada en la credencial. o Credencial identificatoria permanente o provisoria con fecha vigente a la fecha de prestación, o bien en formato digital mediante la aplicación OSRJA. o Importante: Las credenciales digitales no tienen fecha de vencimiento; serán válidas mientras el afiliado esté activo en el sistema. o ● Documento Nacional de Identidad o cualquier otro documento que acredite la identidad del afiliado. ● El afiliado/a podrá acceder a las prestaciones únicamente si la credencial digital está vigente, sin necesidad de validar en SSSalud, ANSES ni recibo de sueldo. ● Nueva medida a partir de Junio 2025: Implementación con obligatoriedad de un validador para verificar el estado del afiliado en el padrón OSRJA: ACTIVO O NO ACTIVO. El prestador deberá gestionar el usuario web de nuestra página con el sector de contratos. ● En caso de duda, el afiliado podrá comunicarse de lunes a viernes de 09:00 a 17:00 hs al teléfono 11-7700-0401 int. 2209 o por correo electrónico a: noelia.koeniges@osrja.org.ar.","oro, platino, celeste y verde","","dni, credencial digital","","","","https://app.osrja.org.ar","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPATRONES","TIENE QUE INFORMAR TODAS LAS INTERNACIONES A internaciones@ospatrones.com.ar","• BASICO, ESPECIAL, SUPERIOR, GENUINO SUPERIOR, PATRONES PLUS, S1000, PTO SAN MARTÍN","","Para acceder a las prestaciones de la Obra Social, los afiliados deberán presentar: - Credencial virtual o provisoria vigente. - Documento de identidad. - Validación en el sistema online (Activia / ITC / PC Pos).","","","Depende el plan","EN PROCESO","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPAT Obra Social del Personal de la Actividad del Turf","Lunes a viernes de 10 a 16hs: (+54) 9 11 5070-2000 Central de Atención al Afiliado 24hs | 0800 999 1656 CONSULTAR ESTADO DE AFILIACIÓN Se puede constatar estado de afiliación a OSPAT: o A través del PADRÓN WEB: http://padron.ospat.com.ar/ a. Para crear usuario con acceso a Padrón Web escribir a gatical@ospat.com.ar Informando el correo electrónico institucional que se utilizará para el acceso. o Solicitando confirmación de afiliación con los operadores de la Obra Social al 0800 999 1656 las 24hs Plazo de denuncia dentro de las 24 hs: autorizaciones@ospat.com.ar.","DOCFE: Plan PLATA,Plan ORO.","- SJO- OSPAT (OS DEL PERSONAL DE LA ACTIVIDAD DEL TURF) - GRAL- OSPAT (OS DEL PERSONAL DE LA ACTIVIDAD DEL TURF)","AUTORIZACIONES A excepción de las prestaciones de urgencia, todas las consultas y prestaciones médicas requieren autorización de la Obra Social OSPAT. Las mismas serán autorizadas a través de correo electrónico por nuestra web https://www.ospat.com.ar/ingreso-autorizaciones/ AFILIADO, DEBE PRESENTAR DNI, CREDENCIAL DIGITAL O PLÁSTICA","","","","http://padron.ospat.com.ar/","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","VITAS","","V100 y V101 -- V700 NO ABONA COSEGURO","","DNI, CREDENCIAL DIGITAL Y AUTORIZACIÓN","","","DEPENDE EL PLAN","","1","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSAPM - Obra Social Agentes de Propaganda Médica","","PLAN 1000 -- PLAN 3000 -- PLAN 5000 -- PLAN 5000 APM -- PLAN PLATINO -- PLAN 1000C","","","","","","","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","1","1","1","0"],
+["ACTIVO","OSPAPORT","","","","","","","","","0","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ASISMED","","Acero, Cromo, Plata, A, AR, AR Classic, NR, Oro, Bronce, Níquel, C, CR, D.","","DNI Y CREDENCIAL FISICA/DIGITAL","NO ABONAN","A cargo del afiliado","depende el plan, ver validador","https://app.autorizame.com.ar/AutorizaMe/com.autorizame.login","0","0","0","1","1","1","1","1","1","1","1","0","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSTECF","","","","","","","","","0","0","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","COLEGIO DE ESCRIBANOS","","","","SOLO GALLEGO Y SAN JOSE","","","","","1","1","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","HOMINIS","","VITA EMP -- AQUA MAS/AQUA MAS MUGEBA -- VITA MAS/VITA MAS MUGESBA -- VITA MÁS OSPHG","","","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OMINT","","","","SARMIENTO TALAR Y SAN JOSE","","","","","1","1","0","0","0","0","0","1","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSCAJA - MINISTERIO DE LA PROV DE STA CRUZ","","","","","","","","","1","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","SABER SALUD","","","","","","","","https://apps.saberplandesalud.com.ar:820/Account/Login?ReturnUrl=%2f#!Solicitud/Ambulatorio","0","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["ACTIVO","SANCOR SALUD(AMSS-OSDIC-FOSDIC)","","SARMIENTO + TALAR + TORCUATO","","DNI, Credencial fisica o digital","","","","","0","0","0","0","0","0","0","1","0","1","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","EUROLIFE MEDICINA PRIVADA","","","","","","","","","1","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSPL (ladrilleros)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","O.S.CAJA DE SERV.SOCIALES DE LA PCIA. STA.CRUZ","SOLAMENTE GALLEGO","PLAN UNICO","CG- CG- O.S.CAJA DE SERV.SOCIALES DE LA PCIA. STA.CRUZ","","","","","","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","ASOC. CIVIL DE ESTUDIOS SUPERIORES - HOSPITAL AUSTRAL","MI MEDICO 1100, 1201, 1202, ABONAN COSEGUROS","MI MEDICO, ACES, CLASICO,","SAR- HOSPITAL AUSTRAL","DNI, Credencial fisica o digital","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CIDEA","","","SJO- CIDEAR","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","COMEI","La única forma de acreditación será por intermedio de la Credencial Digital Co.Me.I. Móvil. En la misma figuran los datos filiatorios de los Beneficiarios como así también la condición referida a la habilitación del mismo para el uso toda prestación","","","","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","AMEBPBA - Asociación Mutual de Empleados del Banco Provincia SOLO SANATORIO SARMIENTO","Guardia no requiere autorizacion, atencion programada no requiere autorizacion ni rx, ecg,ecografias nomenclaras, laboratorio nomenclado + consultas. Las internaciones deben denunciarse dentro de las primeras 24 hs. En caso de requerir un traslado en ambulancia deben comunicarse al internacion@mitre2040.com.ar T.E.(011) 4127-6600 int. 6440/6455 (fax 4127-6455) y fuera del horario administrativo al 0800 222 6888.","PLAN UNICO","","DNI, CREDENCIAL FISICA O DIGITAL","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PEDIATRICO - O.S.EMPLEADOS DE COMERCIO Y ACT-OSECAC","","","","","","","","","0","0","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","GENESEN MEDICINA PRIVADA","","","","","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","GRUPO ALBA SALUD S.A.","","","","PLAN SEMBRAR SALUD","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","MEDICAL SERVICIOS DE SALUD SRL,","","","","","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSJERA-OSPJERA (OBRA SOCIAL DEL PERSONAL JERARQUICO DE LA REPUBLICA ARGENTINA)","","BASICO -- 600 -- PLUS -- 700 -- 800 -- JOVEN 800 -- DRO 800","SJO- OSJERA","DNI, CREDENCIAL","","","","","0","1","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CLINICA LOBOS","","","","SOLO DERIVACIONES","","","","","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ALTA SALUD (SANTA SALUD)","","","","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","FRESENIUS","","","","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PROSAL MEDICINA PRIVADA S.A","","","","","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PLAN MEDICO SAN JOSE","","","","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","COMEDICA","","BASICO, BASICO 2021, ESPECIAL, SALUD","SJO- COMEDICA","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","DOSUBA","OBRA SOCIAL DOCENTES DE LA UNIVERSIDAD DE BUENOS AIRES","PLAN UNICO ADULTOS","SJO- DOSUBA","DNI, CREDENCIAL","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OBSBA","","","","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","MAC MEDICINA DE ALTA COMPETENCIA","","","","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPACARP - PATRONES DE CABOTAJE DE RIOS Y COMPOSITORES","","","","SAN JOSE","","","","","0","1","0","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PRIVAMED","","","","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OMDS (SERVICIOS MEDICOS SRL) GERENCIA OSTCARA (CARNE) - OMDS","","","","SAN JOSE","","","","","1","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSSEG OBRA SOCIAL SEGUROS","","450 -- INTEGRAL (CREDENCIAL AZUL) -- INTEGRAL ADHERENTE (CREDENCIAL AMARILLO)","- SAR- OSSEG (OBRA SOCIAL DE SEGUROS) - SJO- OSSEG (OBRA SOCIAL DE SEGUROS)","SARMIENTO Y SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","IOSFA","","PROPIO SARMIENTO","","DNI y AUTORIZACIÓN.","","","","https://iosfa.gob.ar/prestadores/","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","SADAIC - ARG. DE AUTORES Y COMPOSITORES","","","","SAN JOSE","","","","","0","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","AGENTES DE PROP.MEDICA","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","EMPLEADOS DE FARMACIA","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","HOSP. AUSTRAL","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","IOSE INTERNADOS","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","MEDIFE","","SARMIENTO","","DNI, CREDENCIAL","","","","","0","0","0","0","0","0","0","1","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","O. S. DEL PERSONAL GRAFICO - OSPG","PLAN S2: Tienen acceso a todas las prestaciones convenidad. PLAN S1: Tienen acceso únicamente a la atención ambulatoria por guardia. GUARDIA: No se cobra coseguro.","","","DNI, Credencial fisica o digital","CUBRE APLICACIONES","DEPENDE PLAN","DEPENDE PLAN","https://ospg.org.ar/portal-de-prestadores-video-tutorial/","0","0","1","1","1","1","1","1","1","1","1","1","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSTEE (LUZ MEDICA)","","","","PROPIO SARMIENTO","","","","","1","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","1"],
+["ACTIVO","OSMATA - OS MECANICOS Y AFINES DEL TRANSPORTE AUTOMOTOR","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPAV","","","","PROPIO SARMIENTO","","","","","0","1","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPE PETROLEROS","Se detalla dentro del convenio que practicas llevan y que practicas no llevan autorizacion https://basadoc.grupobasa.com.ar/pydio/basapublica/convenios","PLAN A-606 - ABONA COSEGURO -- PLAN 400 - SIN COSEGUROS -- PLAN 300 - SIN COSEGUROS","","SARMIENTO Y TALAR","","","DEPENDE PLAN","","0","0","0","0","0","0","0","1","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PODER JUDICIAL","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","HOSPITAL LA MERCED","Gerencia OSPM (OBRA SOCIAL PERSONAL MAESTRANZA) Es condición imprescindible para la internación- atención ambulatoria, de los afiliados de O.S.P.M., la presentación de la siguiente documentación: - Carnet de Afiliado a la Obra Social vigente - Documento de Identidad (incluyendo domicilio actual) - Último recibo de haberes del titular","PLAN UNICO","","CAMPANA, ZARATE Y SJO","","","","","0","1","0","0","0","0","0","0","1","0","0","0","1","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSPM (MAESTRANZA)|","CONTRATO DIRECTO, AL 19/02/2026 SUSPENDIDO. OSPM, gerenciado por HOSPITAL LA MERCED (SJO), y RIOMEDICA. TODO OK. NO HAY SUSPENSIÓN","PLAN UNICO","","","","","","","1","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPOCE","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","PERS. DE FARMACIA OSPF","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PERSONAL DE TV","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","STAFF MEDICO","","","","PROPIO SARMIENTO","","","","","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSCA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","ASISTIR","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","ANDES SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","COBERTURA DE SALUD S.A. - BOREAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","HIGEA SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","O.S COND. DE TRANS.COLEC. DE PAS. O / UTA - OSCTCP","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","O.SOCIAL CONDUCTORES DE REMISES Y AUTOS AL INSTANTE Y AFINES - OSCRAIA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","OBRA SOCIAL DE PETROLEROS - OSPE","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","SUMA SALUD","","Osuthgra entra por SUMA SALUD","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["SUSPENDIDO","SER SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["SUSPENDIDO","ACLISA - Asociación de Clínicas, Sanatorios y Hospitales Privados de San Juan","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","O. S. TRABAJ DE ESTACIONES DE SERVICIOS - OSTES","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","OSTPCPH Y ARA (PASTELEROS) - ELEVAR","","","","DNI, credencial, recibo de sueldo","","","Bono consulta","SI8","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","O.S. DOCENTES PARTICULARES (OSDOP)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","FADMED S.A. (FADMEDICAL S.A.)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","MUTUAL DEL PERSONAL DE AGUA Y ENERGIA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","OSPAV (ACONCAGUA)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","O.S.PERS.IND.QUIMICA Y PETROQ. - OSPIQYP","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","ASOCIART S.A. A.R.T.","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","CIMESA - CIRCULO MEDICO DE MENDOZA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","CIRCULO MEDICO DEL ESTE","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","RED SALUD S.A. - PROSALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","OSMATA - OS MECANICOS Y AFINES DEL TRANSPORTE AUTOMOTOR","Cuenta con convenio en LAS HERAS y en DORREGO","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","OSSPREMZA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","0"],
+["ACTIVO","ASOCIACION MUTUAL SANCOR SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","ITER MEDICINA S.A. (OSPACA-OZAM)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","UNIMED S.A.","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","Osseg - Sindicato del Seguro de la República Argentina","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","MEDISSALUD - SANIP SALUD S.A.","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","RED DE SEGURO MEDICO S.R.L.","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","UTA - OS TRANVIARIOS AUTOMOTOR","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","PODER JUDICIAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1"],
+["ACTIVO","ROI S.A. (DOCTORED)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","OSFSTLF (LUZ Y FUERZA)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","MUTUAL FLORENTINO AMEGHINO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["SUSPENDIDO","ACLISA. - POLICÍA FEDERAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","ASOC. MUTUAL 20 DE OCTUBRE","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","1"],
+["ACTIVO","OSYC (Obra Social de Yacimientos Carboníferos)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","1","1","0"],
+["ACTIVO","OSPEMOM (Obra social del Personal de Micros y Ómnibus de Mendoza)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","1","0"],
+["ACTIVO","SALUD DEL NUEVO CUYO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","IAPOS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","CONFITEROS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","ASOC.CLINICA Y SANATORIO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","OSPESGA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","SUTIAGA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","OSAMMVC","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","PORTUARIOS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","GLOBAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["ACTIVO","BARRIDO Y LIMPIEZA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0"],
+["SUSPENDIDO","OSTCARA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ADMED","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ANDAR","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CAMIONEROS PRIMERO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ELEVAR","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","EN SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","FEDERADA SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","IMESA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","INTEGRAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","JERARQUICOS SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","LUZ Y FUERZA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OMINT","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPAC","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSSEG","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSTEP","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PREVENCION SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","SANCOR","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","SWISS MEDICAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ASOCIART ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","BERKLEY ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CEMLA ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","EXPERTA ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","FEDERACION PATRONAL ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","GALENO ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","LA 2DA ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","MAPFRE ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","SERENA ART","(Antes OMINT ART)","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","PREVENCION ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1"],
+["ACTIVO","PROVINCIA ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","RECONQUISTA ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","SANCOR INTEGRO ART","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","AVALIAN","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","AMR SALUD (PLAN 1000, 1001, ORO, DORADO, ESPECIAL Y PLATA)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1"],
+["ACTIVO","AMSTERDAM SALUD (RECIBIDORES DE GRANOS) (VER EN LA ORDEN SI TIENE COPAGO)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","AMUR PLANES SERENOS DE BUQUE-D-A-M- OTROS PLANES (DE LINEA)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CAJA FORENSE","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","CIENCIAS ECONOMICAS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","DEMI SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","IAPOS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","INGENIERIA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","MEDYCIN","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","MOSAISTAS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","MUT ECLESIATICA SAN PEDRO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1"],
+["ACTIVO","MUTUAL FERROVIARIA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OPDEA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSIAD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSMATA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPESGA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPIM MONOTRIBUTO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPRO (SINDICATO DE PRENSA)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","RECOLECCION Y BARRIDO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","SUTIAGA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","TELEVISION (SAT)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","UNR","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","ALIANZA MEDICA AMC SALUD- SOLIDARIA SALUD GUINCHEROS- JOCKEY","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","IPAM","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSCEARA (REMISES) PLAN 500","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSCEARA (REMISES) PLAN 900","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSDE 2025-2110","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSDE 2210","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSDE 2310 2410-2450 Y 2510","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPA VIAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","OSPER y HRA (EDIFICIO)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSPRERA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["SUSPENDIDO","OSTCARA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1"],
+["ACTIVO","OSUTHGRA (GASTRONOMICOS)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","QUIMICA Y PETROQUIMICA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+["ACTIVO","UTA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","VISITAR","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","HIGEA SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","UOM","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","FEDERADA SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","UNIMED S.A.","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","SANIP","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","BOREAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","PASTELEROS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","OSUTHGRA (GASTRONOMICOS)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","OTTES","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","OSACCRA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["SUSPENDIDO","OSPRERA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","OSPIP","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","OSPECON","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","OSPAV","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","OSECAC","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","OSCA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","PODER JUDICIAL","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["SUSPENDIDO","OMEGA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","AMP","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","NUEVA RED","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","ITER MEDICINA S.A. (OSPACA-OZAM)","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","IOSFA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","CONURBANO SALUD S.A.","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","BRAMED","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","AVERA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","AVALIAN","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","ANDES SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","AMISA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","ADMED","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","VENDEDORES DIARIOS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","RED DE SEGURO MEDICO S.R.L.","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSTV","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSSEG","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSPIS","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSPEDYC","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSPE","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSPATCA - OS DEL PERSONAL ADMINISTRATIVO Y TECNICO DE LA CONTRUCCION Y AFINES","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSFYHC - OBRA SOCIAL DEL PERSONAL DE MANIPULEO, EMPAQUE Y EXPEDICION DE FRUTA FRESCA Y HORTALIZAS DE CUYO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSDIPP","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","OSPEDYM","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","JERARQUICOS SALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","DAMSU","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","1"],
+["ACTIVO","CONSALUD","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","SALUD DEL NUEVO CUYO","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"],
+["ACTIVO","ACLISA","","","","","","","","","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","1","0","0","0","0"]
+];
+// ── Carga dinámica desde Google Sheets ──────────────────────
+function getCell(row, idx) {
+  return (row[idx] && row[idx].v != null) ? String(row[idx].v).trim() : '';
+}
+function parseSheetRow(row) {
+  var fin = getCell(row, 2);
+  if (!fin) return null;
+  var planes = getCell(row, 4);
+  if (planes.indexOf('\n') >= 0) {
+    planes = planes.split('\n').map(function(p){return p.trim();}).filter(Boolean).join(' -- ');
+  }
+  var entry = [getCell(row,1),fin,getCell(row,3),planes,getCell(row,5),getCell(row,6),getCell(row,7),getCell(row,8),getCell(row,9),getCell(row,10)];
+  for (var s=11;s<=31;s++) entry.push((row[s]&&row[s].v)?'1':'0');
+  return entry;
+}
+function loadFromSheets() {
+  var url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json';
+  var el=document.getElementById('data-status');
+  fetch(url).then(function(r){return r.text();}).then(function(raw){
+    var s=raw.indexOf('{'),e=raw.lastIndexOf('}');
+    if(s<0||e<0) throw new Error('Respuesta invalida');
+    var data=JSON.parse(raw.substring(s,e+1));
+    var rows=data.table.rows;
+    if(!rows||rows.length<2) throw new Error('Sin filas');
+    var newD=[];
+    for(var i=1;i<rows.length;i++){
+      if(!rows[i]||!rows[i].c) continue;
+      var p=parseSheetRow(rows[i].c);
+      if(p) newD.push(p);
+    }
+    if(newD.length<10) throw new Error('Pocos registros: '+newD.length);
+    D=newD;
+    var now=new Date();
+    var ts=now.toLocaleDateString('es-AR')+' '+now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    el.textContent='Datos actualizados '+ts+' · '+newD.length+' obras sociales';
+    el.style.color='#0B9E8A';
+  }).catch(function(err){
+    console.warn('Sheets:',err.message,'usando datos locales');
+    var fechaArchivo = new Date(document.lastModified).toLocaleDateString('es-AR');
+    el.textContent='\u26a0\ufe0f SIN CONEXI\u00d3N \u2014 Mostrando informaci\u00f3n del ' + fechaArchivo;
+    el.style.color='#DC2626';
+    el.style.fontWeight='600';
+  });
+}
+document.addEventListener('DOMContentLoaded', function(){loadFromSheets();});
+
+var sel=null,blurT=null;
+var osIn=document.getElementById('os-in');
+var acDd=document.getElementById('ac-dd');
+osIn.addEventListener('input',renderAC);
+osIn.addEventListener('focus',renderAC);
+osIn.addEventListener('blur',function(){blurT=setTimeout(closeAC,200);});
+function renderAC(){
+  var q=osIn.value.toLowerCase().trim();
+  if(q.length<1){closeAC();clearForm();return;}
+  var hits=D.filter(function(r){return r[1].toLowerCase().indexOf(q)>=0;}).slice(0,14);
+  if(!hits.length){
+    acDd.innerHTML='<div class="ac-item" style="color:#94A3B8">Sin resultados</div>';
+  } else {
+    acDd.innerHTML=hits.map(function(r){
+      var ok=r[0].toUpperCase().indexOf('ACTIVO')>=0;
+      return '<div class="ac-item" onclick="pick('+D.indexOf(r)+')"><div class="dot '+(ok?'dot-ok':'dot-no')+'"></div><span>'+esc(r[1])+'</span></div>';
+    }).join('');
+  }
+  acDd.classList.add('open');
+}
+function closeAC(){acDd.classList.remove('open');}
+function pick(i){
+  clearTimeout(blurT);
+  sel=D[i];
+  osIn.value=sel[1];
+  closeAC();
+  fillPlans();
+  fillSedes();
+  document.getElementById('btn-ok').disabled=false;
+}
+function fillPlans(){
+  var s=document.getElementById('plan-sel');
+  s.disabled=false;
+  var raw=(sel[3]||'').trim();
+  if(!raw){s.innerHTML='<option value="PLAN UNICO">Plan Unico</option>';return;}
+  var parts=raw.split(/\s*\/\s*|\s*--\s*|\n/).map(function(p){return p.trim();}).filter(function(p){return p.length>1;});
+  var seen={};parts=parts.filter(function(p){return seen[p]?false:(seen[p]=true);});
+  s.innerHTML=(parts.length>1?'<option value="">Selecciona plan</option>':'')+parts.map(function(p){
+    return '<option value="'+esc(p)+'">'+esc(p)+'</option>';
+  }).join('');
+  if(parts.length===1)s.value=parts[0];
+}
+function fillSedes(){
+  var s=document.getElementById('sede-sel');
+  s.disabled=false;
+  s.innerHTML='<option value="">Selecciona sede</option>'+SEDES.map(function(n,i){
+    var ok=sel[10+i]==='1';
+    return '<option value="'+n+'" '+(ok?'':'style="color:#94A3B8"')+'>'+(ok?'\u2713':'\u2717')+' '+n+'</option>';
+  }).join('');
+}
+function clearForm(){
+  sel=null;
+  ['plan-sel','sede-sel'].forEach(function(id){
+    var s=document.getElementById(id);
+    s.innerHTML='<option value="">Elegi la OS</option>';
+    s.disabled=true;
+  });
+  document.getElementById('btn-ok').disabled=true;
+  document.getElementById('result').style.display='none';
+}
+function buscar(){
+  if(!sel)return;
+  var r=sel;
+  var activo=r[0].toUpperCase().indexOf('ACTIVO')>=0;
+  var plan=document.getElementById('plan-sel').value;
+  var sede=document.getElementById('sede-sel').value;
+  var si=SEDES.indexOf(sede);
+  var sedeOk=si>=0&&r[10+si]==='1';
+  var cls=!activo?'b-err':(!sede||sedeOk)?'b-ok':'b-warn';
+  var icons={
+    'b-ok':'<polyline points="20 6 9 17 4 12"/>',
+    'b-warn':'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    'b-err':'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+  };
+  var bT=!activo?'Contrato SUSPENDIDO \u2014 no otorgar turnos':
+    !sede?'Contrato ACTIVO':
+    sedeOk?'Contrato ACTIVO \u2014 '+esc(sede)+' incluida':
+    esc(sede)+' NO est\u00e1 en el contrato vigente';
+  var bS=!activo?'El acuerdo con '+esc(r[1])+' est\u00e1 suspendido.':
+    !sede?esc(r[1])+' tiene contrato vigente.':
+    sedeOk?'El paciente puede ser atendido en '+esc(sede)+'.':
+    'Esta sede no figura en el acuerdo. Verificar con el \u00e1rea comercial.';
+  var pp=[];
+  if(r[3]){
+    var seen={};
+    r[3].split(/\s*\/\s*|\s*--\s*|\n/).forEach(function(x){x=x.trim();if(x.length>1&&!seen[x]){seen[x]=true;pp.push(x);}});
+  }
+  var plH=pp.length?pp.map(function(x){return '<span class="chip">'+esc(x)+'</span>';}).join(''):'<span style="color:#94A3B8">Sin planes especificados</span>';
+  var seH=SEDES.map(function(n,i){
+    var ok=r[10+i]==='1',hl=(n===sede)?' s-hl':'';
+    return '<span class="'+(ok?'ss':'sn')+hl+'">'+(ok?'\u2713':'\u2717')+' '+n+'</span>';
+  }).join('');
+  var vR=(r[9]||'').trim();
+  var vH=vR&&vR.indexOf('http')===0?'<a class="lnk" href="'+vR+'" target="_blank">\u2192 Abrir validador</a>':
+    vR&&vR!=='NO'&&vR!=='SI'?esc(vR):'<span style="color:#94A3B8">Sin validador especificado</span>';
+  var dH='';
+  if((r[5]||'').trim()){
+    r[5].split(/\n/).forEach(function(x){x=x.trim();if(x)dH+='<p>\u2022 '+esc(x)+'</p>';});
+    if(!dH)dH='<p>\u2022 '+esc(r[5])+'</p>';
+  } else {
+    dH='<p style="color:#94A3B8">Sin documentaci\u00f3n especificada</p>';
+  }
+  var ai=buildAI(activo,sedeOk,sede,plan,r[2],r[8],r[6],r[7],r[9],r[1]);
+  document.getElementById('result').innerHTML=
+    '<div class="banner '+cls+'">'
+    +'<div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+icons[cls]+'</svg></div>'
+    +'<div><div class="bt">'+bT+'</div><div class="bs">'+bS+'</div></div></div>'
+    +'<div class="ai-box"><div class="ai-lbl">An\u00e1lisis para el admisionista</div>'+ai+'</div>'
+    +'<div class="cards2">'
+    +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Informaci\u00f3n del financiador</div><div class="cb"><p><strong>'+esc(r[1])+'</strong></p>'+(r[2]?'<p style="color:#64748B;font-size:12px;margin-top:6px">'+esc(r[2])+'</p>':'<p style="color:#CBD5E1">Sin observaciones adicionales</p>')+'</div></div>'
+    +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Documentaci\u00f3n a presentar</div><div class="cb">'+dH+'</div></div>'
+    +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Figura en SC</div><div class="cb">'+(r[4]&&r[4].trim()?'<p>'+esc(r[4])+'</p>':'<p style="color:#94A3B8">Sin informaci\u00f3n en SC</p>')+'</div></div>'
+    +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Coseguros y cobertura adicional</div><div class="cb"><p><strong>Coseguros:</strong> '+esc(r[8]||'\u2014')+'</p><p><strong>Enfermer\u00eda:</strong> '+esc(r[6]||'\u2014')+'</p><p><strong>APB:</strong> '+esc(r[7]||'\u2014')+'</p></div></div>'
+    +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Planes disponibles</div><div class="cb">'+(plan?'<div style="background:#ECFDF5;color:#065F46;font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:8px">Plan seleccionado: <strong>'+esc(plan)+'</strong></div>':'')+'<div>'+plH+'</div></div></div>'
+    +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Validador de afiliados</div><div class="cb">'+vH+'</div></div>'
+    +'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sedes incluidas en el contrato</div><div class="cb"><div style="display:flex;flex-wrap:wrap">'+seH+'</div></div></div>'
+    +'</div>';
+  document.getElementById('result').style.display='block';
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function buildAI(activo,sedeOk,sede,plan,obs,coseg,enfer,apb,valid,os){
+  if(!activo)return'<strong>Contrato suspendido:</strong> no otorgar turno ni admitir pacientes de <strong>'+esc(os)+'</strong>. Derivar a auditor\u00eda o gerencia comercial.';
+  var p=[];
+  p.push('El contrato con <strong>'+esc(os)+'</strong> est\u00e1 <strong>vigente y activo</strong>.');
+  if(sede){
+    if(sedeOk)p.push('La sede <strong>'+esc(sede)+'</strong> est\u00e1 incluida en el acuerdo \u2014 pod\u00e9s proceder con la admisi\u00f3n.');
+    else p.push('<strong>Atenci\u00f3n:</strong> la sede <strong>'+esc(sede)+'</strong> NO figura en el contrato. No asignar turno sin verificar con el \u00e1rea comercial.');
+  }
+  if(plan)p.push('Plan consultado: <strong>'+esc(plan)+'</strong>.');
+  if(coseg){
+    var c=coseg.toUpperCase();
+    if(c==='OS'||c.indexOf('OBRA SOCIAL')>=0)p.push('Coseguros a cargo de la obra social \u2014 el paciente no abona en ventanilla.');
+    else if(c==='NO TIENE'||c==='NO')p.push('Sin coseguros.');
+    else if(c.indexOf('AFILIADO')>=0||c.indexOf('AFILIADX')>=0)p.push('Coseguros a cargo del afiliado \u2014 cobrar en admisi\u00f3n seg\u00fan cuadro vigente.');
+    else if(c.indexOf('DEPENDE')>=0)p.push('Coseguros dependen del plan \u2014 verificar cuadro antes de admitir.');
+    else if(c.indexOf('BONO')>=0)p.push('Requiere bono de consulta \u2014 el afiliado debe presentarlo.');
+    else p.push('Coseguros: <strong>'+esc(coseg)+'</strong>.');
+  }
+  if(obs){
+    var o=obs.toLowerCase();
+    if(o.indexOf('autorizaci')>=0&&(o.indexOf('previa')>=0||o.indexOf('requieren')>=0))
+      p.push('<strong>Requiere autorizaci\u00f3n previa</strong> para pr\u00e1cticas \u2014 verificar seg\u00fan el tipo de consulta.');
+    var tel=obs.match(/0[89]\d{2}[-\s]?\d{3}[-\s]?\d{4}/);
+    if(tel)p.push('Contacto de mesa operativa: <strong>'+tel[0]+'</strong>.');
+    if(o.indexOf('baja')>=0)p.push('<strong>Hay \u00edtems o planes dados de baja</strong> \u2014 leer observaciones en detalle.');
+  }
+  if(valid&&valid!=='NO'&&(valid.indexOf('http')===0||valid.indexOf('.')>=0))
+    p.push('Record\u00e1 <strong>validar la afiliaci\u00f3n</strong> en el sistema antes de confirmar el turno.');
+  return p.join(' ');
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>
