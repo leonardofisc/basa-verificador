@@ -659,7 +659,27 @@ function buscar(){
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Informaci\u00f3n del financiador</div><div class="cb"><p><strong>'+esc(r[1])+'</strong></p>'+(r[2]?'<p style="color:#64748B;font-size:12px;margin-top:6px">'+esc(r[2])+'</p>':'<p style="color:#CBD5E1">Sin observaciones adicionales</p>')+'</div></div>'
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Documentaci\u00f3n a presentar</div><div class="cb">'+dH+'</div></div>'
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Figura en SC</div><div class="cb">'+(r[4]&&r[4].trim()?'<p>'+esc(r[4])+'</p>':'<p style="color:#94A3B8">Sin informaci\u00f3n en SC</p>')+'</div></div>'
-    +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Coseguros y cobertura adicional</div><div class="cb"><p><strong>Coseguros:</strong> '+esc(r[8]||'\u2014')+'</p><p><strong>Enfermer\u00eda:</strong> '+esc(r[6]||'\u2014')+'</p><p><strong>APB:</strong> '+esc(r[7]||'\u2014')+'</p></div></div>'
+    +(function(){
+  var cosegVal=r[8]||'';
+  var cosegH='';
+  if(cosegVal){
+    // Detectar si hay links (separados por coma)
+    var partes=cosegVal.split(',').map(function(x){return x.trim();});
+    var links=partes.filter(function(x){return x.indexOf('http')===0;});
+    var textos=partes.filter(function(x){return x.indexOf('http')!==0;});
+    if(textos.length) cosegH+='<p>'+esc(textos.join(', '))+'</p>';
+    if(links.length){
+      cosegH+='<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">';
+      links.forEach(function(url,i){
+        cosegH+='<a class="lnk" href="'+esc(url)+'" target="_blank">→ Ver planilla de coseguros'+(links.length>1?' '+(i+1):'')+'</a>';
+      });
+      cosegH+='</div>';
+    }
+  } else {
+    cosegH='<span style="color:#94A3B8">—</span>';
+  }
+  return '<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Coseguros y cobertura adicional</div><div class="cb">'+cosegH+'<p><strong>Enfermería:</strong> '+esc(r[6]||'—')+'</p><p><strong>APB:</strong> '+esc(r[7]||'—')+'</p></div></div>';
+})()
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Planes disponibles</div><div class="cb">'+(plan?'<div style="background:#ECFDF5;color:#065F46;font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:8px">Plan seleccionado: <strong>'+esc(plan)+'</strong></div>':'')+'<div>'+plH+'</div></div></div>'
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Validador de afiliados</div><div class="cb">'+vH+'</div></div>'
     +'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sedes incluidas en el contrato</div><div class="cb"><div style="display:flex;flex-wrap:wrap">'+seH+'</div></div></div>'
@@ -714,3 +734,4 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 </script>
 </body>
 </html>
+
