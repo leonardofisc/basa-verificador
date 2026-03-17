@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.0.6</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.0.7</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var SEDES=['CENTRO GALLEGO','SAN JOSE','POLICLINICO CENTRAL UOM','UOM AVELLANEDA','SANTA CLARA QUILMES','SANTA CLARA VARELA','UOM SAN MARTIN','CENTRO MEDICO TALAR','SANTA CLARA ZARATE','SAGRADO CORAZON DE DON TORCUATO','GENERAL SARMIENTO','MORON','CAMPANA','SANATORIO LOBOS','ROSENDO GARCIA','UOM CASILDA','SAN JUAN','STA CLARA MENDOZA','DORREGO','SOCORROS MUTUOS','SANTA ROSA'];
@@ -524,9 +524,9 @@ function loadFromSheets() {
     if(s<0||e<0) throw new Error('Respuesta invalida');
     var data=JSON.parse(raw.substring(s,e+1));
     var rows=data.table.rows;
-    if(!rows||rows.length<2) throw new Error('Sin filas');
+    if(!rows||rows.length<1) throw new Error('Sin filas');
     var newD=[];
-    for(var i=1;i<rows.length;i++){
+    for(var i=0;i<rows.length;i++){
       if(!rows[i]||!rows[i].c) continue;
       var p=parseSheetRow(rows[i].c);
       if(p) newD.push(p);
