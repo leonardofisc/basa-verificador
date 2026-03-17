@@ -488,7 +488,18 @@ var D=[
 ];
 // ── Carga dinámica desde Google Sheets ──────────────────────
 function getCell(row, idx) {
-  return (row[idx] && row[idx].v != null) ? String(row[idx].v).trim() : '';
+  if (!row[idx] || row[idx].v == null) return '';
+  var v = row[idx].v;
+  if (typeof v === 'object' && v instanceof Date) {
+    var dd = String(v.getDate()).padStart(2,'0');
+    var mm = String(v.getMonth()+1).padStart(2,'0');
+    return dd+'/'+mm+'/'+v.getFullYear();
+  }
+  var dm = String(v).match(/Date\((\d+),(\d+),(\d+)\)/);
+  if (dm) {
+    return String(parseInt(dm[3])).padStart(2,'0')+'/'+String(parseInt(dm[2])+1).padStart(2,'0')+'/'+dm[1];
+  }
+  return String(v).trim();
 }
 function parseSheetRow(row) {
   var fin = getCell(row, 2);
@@ -610,16 +621,7 @@ function buscar(){
     'b-warn':'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
     'b-err':'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
   };
-  var actFechaRaw=(r[33]||'').trim();
-  var actFecha='';
-  if(actFechaRaw){
-    var dm=actFechaRaw.match(/Date\((\d+),(\d+),(\d+)\)/);
-    if(dm){
-      actFecha=String(parseInt(dm[3])).padStart(2,'0')+'/'+String(parseInt(dm[2])+1).padStart(2,'0')+'/'+dm[1];
-    } else {
-      actFecha=actFechaRaw;
-    }
-  }
+  var actFecha=(r[33]||'').trim();
   var actLabel=actFecha?' \u2014 \u00faltima actualizaci\u00f3n '+actFecha:'';
   var bT=!activo?'Contrato SUSPENDIDO \u2014 no otorgar turnos':
     !sede?'Contrato ACTIVO'+actLabel:
