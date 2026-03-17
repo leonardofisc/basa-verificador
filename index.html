@@ -499,6 +499,10 @@ function parseSheetRow(row) {
   }
   var entry = [getCell(row,1),fin,getCell(row,3),planes,getCell(row,5),getCell(row,6),getCell(row,7),getCell(row,8),getCell(row,9),getCell(row,10)];
   for (var s=11;s<=31;s++) entry.push((row[s]&&row[s].v)?'1':'0');
+  // Cols nuevas: AG=32 NORMA OPERATIVA, AH=33 FOTO CREDENCIAL, AI=34 ACT.
+  entry.push(getCell(row,32)); // [31] NORMA OPERATIVA
+  entry.push(getCell(row,33)); // [32] FOTO CREDENCIAL
+  entry.push(getCell(row,34)); // [33] ACT.
   return entry;
 }
 function loadFromSheets() {
@@ -541,7 +545,7 @@ osIn.addEventListener('blur',function(){blurT=setTimeout(closeAC,200);});
 function renderAC(){
   var q=osIn.value.toLowerCase().trim();
   if(q.length<1){closeAC();clearForm();return;}
-  var hits=D.filter(function(r){return r[1].toLowerCase().indexOf(q)>=0;}).slice(0,14);
+  var hits=D.filter(function(r){return r[1].toLowerCase().indexOf(q)>=0||(r[3]&&r[3].toLowerCase().indexOf(q)>=0);}).slice(0,14);
   if(!hits.length){
     acDd.innerHTML='<div class="ac-item" style="color:#94A3B8">Sin resultados</div>';
   } else {
@@ -606,10 +610,12 @@ function buscar(){
     'b-warn':'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
     'b-err':'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
   };
+  var actFecha=(r[33]||'').trim();
+  var actLabel=actFecha?' \u2014 \u00faltima actualizaci\u00f3n '+esc(actFecha):'';
   var bT=!activo?'Contrato SUSPENDIDO \u2014 no otorgar turnos':
-    !sede?'Contrato ACTIVO':
-    sedeOk?'Contrato ACTIVO \u2014 '+esc(sede)+' incluida':
-    esc(sede)+' NO est\u00e1 en el contrato vigente';
+    !sede?'Contrato ACTIVO'+actLabel:
+    sedeOk?'Contrato ACTIVO \u2014 '+esc(sede)+' incluida'+actLabel:
+    esc(sede)+' NO est\u00e1 en el contrato vigente'+actLabel;
   var bS=!activo?'El acuerdo con '+esc(r[1])+' est\u00e1 suspendido.':
     !sede?esc(r[1])+' tiene contrato vigente.':
     sedeOk?'El paciente puede ser atendido en '+esc(sede)+'.':
@@ -648,7 +654,7 @@ function buscar(){
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Planes disponibles</div><div class="cb">'+(plan?'<div style="background:#ECFDF5;color:#065F46;font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:8px">Plan seleccionado: <strong>'+esc(plan)+'</strong></div>':'')+'<div>'+plH+'</div></div></div>'
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Validador de afiliados</div><div class="cb">'+vH+'</div></div>'
     +'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sedes incluidas en el contrato</div><div class="cb"><div style="display:flex;flex-wrap:wrap">'+seH+'</div></div></div>'
-    +'</div>';
+    +(r[31]&&r[31].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Norma operativa</div><div class="cb"><a class="lnk" href="'+esc(r[31])+'" target="_blank">\u2192 Ver norma operativa</a></div></div>':'')    +(r[32]&&r[32].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Credencial</div><div class="cb"><img src="'+esc(r[32])+'" alt="Credencial" style="max-width:100%;border-radius:8px;border:1px solid #E2E8F0" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;block&quot;"><span style="display:none;color:#94A3B8">No se pudo cargar la imagen</span></div></div>':'')    +'</div>';
   document.getElementById('result').style.display='block';
   document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
