@@ -663,7 +663,20 @@ function buscar(){
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Planes disponibles</div><div class="cb">'+(plan?'<div style="background:#ECFDF5;color:#065F46;font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:8px">Plan seleccionado: <strong>'+esc(plan)+'</strong></div>':'')+'<div>'+plH+'</div></div></div>'
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Validador de afiliados</div><div class="cb">'+vH+'</div></div>'
     +'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sedes incluidas en el contrato</div><div class="cb"><div style="display:flex;flex-wrap:wrap">'+seH+'</div></div></div>'
-    +(r[31]&&r[31].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Norma operativa</div><div class="cb"><a class="lnk" href="'+esc(r[31])+'" target="_blank">\u2192 Ver norma operativa</a></div></div>':'')    +(r[32]&&r[32].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Credenciales</div><div class="cb"><div style="display:flex;flex-wrap:wrap;gap:10px">'+r[32].split(',').map(function(url){url=url.trim();return url?'<img src="'+esc(url)+'" alt="Credencial" style="max-height:200px;border-radius:8px;border:1px solid #E2E8F0;cursor:pointer" onclick="window.open(this.src,\'_blank\')" onerror="this.style.display=&quot;none&quot;">':'';}).join('')+'</div></div></div>':'')    +'</div>';
+    +(r[31]&&r[31].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Norma operativa</div><div class="cb"><a class="lnk" href="'+esc(r[31])+'" target="_blank">\u2192 Ver norma operativa</a></div></div>':'')    +(r[32]&&r[32].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Credenciales</div><div class="cb"><div style="display:flex;flex-wrap:wrap;gap:10px">'+r[32].split(',').map(function(url){
+  url=url.trim();
+  if(!url) return '';
+  // Convertir link de Drive a URL de imagen directa
+  var imgUrl=url;
+  var m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) imgUrl='https://drive.google.com/uc?export=view&id='+m[1];
+  var thumbUrl='https://drive.google.com/thumbnail?id='+m[1]+'&sz=w400';
+  return '<div style="display:inline-block;text-align:center;vertical-align:top">'
+    +'<img src="'+esc(thumbUrl)+'" alt="Credencial" style="max-height:220px;max-width:320px;border-radius:8px;border:1px solid #E2E8F0;cursor:pointer;display:block" onclick="window.open(\''+esc(url)+'\',\'_blank\')" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;inline-block&quot;">'
+    +'<a href="'+esc(url)+'" target="_blank" style="display:none;font-size:12px;color:#0B9E8A;padding:8px 12px;border:1px solid #0B9E8A;border-radius:8px;text-decoration:none">'
+    +'\u2192 Ver credencial</a>'
+    +'</div>';
+}).join('')+'</div></div></div>':'')    +'</div>';
   document.getElementById('result').style.display='block';
   document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
