@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.0</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.1</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -573,6 +573,20 @@ function loadNormas() {
   }).catch(function(e){ console.warn('No se pudo cargar normas:', e.message); });
 }
 
+function renderResumen(texto) {
+  if(!texto) return '<p style="color:#94A3B8;font-size:13px">Sin alertas adicionales.</p>';
+  var lines = texto.split('\n').map(function(l){
+    l = l.trim();
+    if(!l) return '';
+    // Convertir **texto** a <strong>
+    l = l.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // Convertir *texto* a <em>
+    l = l.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    return '<p style="margin:6px 0;font-size:13px;line-height:1.6">'+l+'</p>';
+  }).join('');
+  return lines || '<p style="color:#94A3B8;font-size:13px">Sin alertas adicionales.</p>';
+}
+
 async function analizarNorma(btn) {
   var osNombre=btn.dataset.os, normaUrl=btn.dataset.url, fechaNorma=btn.dataset.fecha;
   var el = document.getElementById('ai-norma-box');
@@ -593,13 +607,7 @@ async function analizarNorma(btn) {
 
     // Mostrar resultado
     if(el) {
-      var html = resumen.split('\n').map(function(l){
-        l = l.trim();
-        if(!l) return '';
-        if(l.startsWith('•')) return '<p style="margin:4px 0">'+esc(l)+'</p>';
-        return '<p style="margin:4px 0">'+esc(l)+'</p>';
-      }).join('');
-      el.innerHTML = html || '<p style="color:#94A3B8">Sin alertas adicionales.</p>';
+      el.innerHTML = renderResumen(resumen);
     }
     if(btn) { btn.style.display='none'; }
 
@@ -607,8 +615,13 @@ async function analizarNorma(btn) {
     if(NORMAS_SCRIPT_URL) {
       fetch(NORMAS_SCRIPT_URL, {
         method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'guardar', financiador:osNombre, fechaNorma:fechaNorma, resumen:resumen })
-      }).catch(function(){});
+      }).then(function(r){return r.json();}).then(function(res){
+        console.log('Guardado en Sheets:', res);
+      }).catch(function(err){
+        console.warn('Error guardando en Sheets:', err.message);
+      });
     }
 
     // Actualizar cache local
@@ -781,11 +794,7 @@ function buscar(){
   var contenido = '';
   if(tieneResumen) {
     // Mostrar resumen guardado
-    contenido = cached.resumen.split('\n').map(function(l){
-      l=l.trim(); if(!l) return '';
-      return '<p style="margin:4px 0;font-size:13px;line-height:1.6">'+esc(l)+'</p>';
-    }).join('');
-    if(!contenido) contenido='<p style="color:#94A3B8;font-size:13px">Sin alertas adicionales.</p>';
+    contenido = renderResumen(cached.resumen);
   } else {
     // Mostrar botón para analizar
     contenido = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
