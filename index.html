@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.1</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.2</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -612,17 +612,16 @@ async function analizarNorma(btn) {
     if(btn) { btn.style.display='none'; }
 
     // Guardar en la planilla si hay URL del Apps Script
-    if(NORMAS_SCRIPT_URL) {
-      fetch(NORMAS_SCRIPT_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'guardar', financiador:osNombre, fechaNorma:fechaNorma, resumen:resumen })
-      }).then(function(r){return r.json();}).then(function(res){
-        console.log('Guardado en Sheets:', res);
-      }).catch(function(err){
-        console.warn('Error guardando en Sheets:', err.message);
-      });
-    }
+    // Guardar via Cloudflare Worker (evita CORS con Apps Script)
+    fetch(PROXY_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'guardarNorma', financiador:osNombre, fechaNorma:fechaNorma, resumen:resumen })
+    }).then(function(r){return r.json();}).then(function(res){
+      console.log('Guardado en Sheets:', res);
+    }).catch(function(err){
+      console.warn('Error guardando:', err.message);
+    });
 
     // Actualizar cache local
     cacheNormas[osNombre.toUpperCase()] = { fechaNorma:fechaNorma, resumen:resumen };
