@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.0.7</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.0.8</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var SEDES=['CENTRO GALLEGO','SAN JOSE','POLICLINICO CENTRAL UOM','UOM AVELLANEDA','SANTA CLARA QUILMES','SANTA CLARA VARELA','UOM SAN MARTIN','CENTRO MEDICO TALAR','SANTA CLARA ZARATE','SAGRADO CORAZON DE DON TORCUATO','GENERAL SARMIENTO','MORON','CAMPANA','SANATORIO LOBOS','ROSENDO GARCIA','UOM CASILDA','SAN JUAN','STA CLARA MENDOZA','DORREGO','SOCORROS MUTUOS','SANTA ROSA'];
@@ -718,6 +718,8 @@ function buildAI(activo,sedeOk,sede,plan,obs,coseg,enfer,apb,valid,os){
     else if(c.indexOf('AFILIADO')>=0||c.indexOf('AFILIADX')>=0)p.push('Coseguros a cargo del afiliado \u2014 cobrar en admisi\u00f3n seg\u00fan cuadro vigente.');
     else if(c.indexOf('DEPENDE')>=0)p.push('Coseguros dependen del plan \u2014 verificar cuadro antes de admitir.');
     else if(c.indexOf('BONO')>=0)p.push('Requiere bono de consulta \u2014 el afiliado debe presentarlo.');
+    else if(coseg.split(',').some(function(x){return x.trim().indexOf('http')===0;}))
+      p.push('Coseguros con planilla adjunta — ver card de coseguros para acceder al detalle.');
     else p.push('Coseguros: <strong>'+esc(coseg)+'</strong>.');
   }
   if(obs){
