@@ -100,9 +100,13 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.0.8</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.0.9</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
+var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
+var PROXY_URL = 'https://basa-proxy.leonardo-fiscina.workers.dev';
+var NORMAS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoPwCGO-SbZsHfkXhN1zuYoGPttceVyljw9HwO5PLvIcWczEsxIMV2_l9IUPeFyY_64g/exec'; // Pegar URL del Apps Script de normas
+var cacheNormas = {}; // cache local de resúmenes
 var SEDES=['CENTRO GALLEGO','SAN JOSE','POLICLINICO CENTRAL UOM','UOM AVELLANEDA','SANTA CLARA QUILMES','SANTA CLARA VARELA','UOM SAN MARTIN','CENTRO MEDICO TALAR','SANTA CLARA ZARATE','SAGRADO CORAZON DE DON TORCUATO','GENERAL SARMIENTO','MORON','CAMPANA','SANATORIO LOBOS','ROSENDO GARCIA','UOM CASILDA','SAN JUAN','STA CLARA MENDOZA','DORREGO','SOCORROS MUTUOS','SANTA ROSA'];
 var D=[
 ["ACTIVO","OSDE - ORGANIZACION DE SERVICIOS DIRECTOS EMPRESARIOS","","PLAN 2 110 - PLAN 2 210 - PLAN 2 310 - PLAN 2 410 - PLAN 2 450 - PLAN 2 510 - PLAN 6 030 - PLAN 8 260 - PLAN 8 360 - PLAN 8 430 - OSDE 1015 - OSDE 2025","- SJO- OSDE - CG- OSDE - SAR- OSDE","DNI, CREDENCIAL DIGITAL O FISICA","DEPENDE PLAN","OS","NO TIENE","Si","1","1","0","0","0","0","0","0","0","0","1","0","0","0","0","0","0","1","1","1","1"],
@@ -545,7 +549,75 @@ function loadFromSheets() {
     el.style.fontWeight='600';
   });
 }
-document.addEventListener('DOMContentLoaded', function(){loadFromSheets();});
+document.addEventListener('DOMContentLoaded', function(){
+  loadFromSheets();
+  loadNormas();
+});
+
+function loadNormas() {
+  var url = 'https://docs.google.com/spreadsheets/d/' + NORMAS_SHEET_ID + '/gviz/tq?tqx=out:json';
+  fetch(url).then(function(r){return r.text();}).then(function(raw){
+    var s=raw.indexOf('{'), e=raw.lastIndexOf('}');
+    var data=JSON.parse(raw.substring(s,e+1));
+    var rows=data.table.rows||[];
+    rows.forEach(function(row){
+      if(!row||!row.c||!row.c[0]||!row.c[0].v) return;
+      var fin = String(row.c[0].v).trim().toUpperCase();
+      cacheNormas[fin] = {
+        fechaNorma: row.c[1] ? String(row.c[1].v||'') : '',
+        resumen: row.c[2] ? String(row.c[2].v||'') : '',
+        fechaAnalisis: row.c[3] ? String(row.c[3].v||'') : ''
+      };
+    });
+    console.log('Normas cargadas:', Object.keys(cacheNormas).length);
+  }).catch(function(e){ console.warn('No se pudo cargar normas:', e.message); });
+}
+
+async function analizarNorma(osNombre, normaUrl, fechaNorma) {
+  var el = document.getElementById('ai-norma-box');
+  var btn = document.getElementById('ai-norma-btn');
+  if(btn) { btn.disabled = true; btn.textContent = 'Analizando...'; }
+  if(el) el.innerHTML = '<div style="color:#64748B;font-size:13px">Analizando norma con IA, esto puede tardar unos segundos...</div>';
+
+  try {
+    var resp = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'analizarNorma', normaUrl:normaUrl, osNombre:osNombre })
+    });
+    var result = await resp.json();
+    if(!result.success) throw new Error(result.error||'Error desconocido');
+
+    var resumen = result.resumen;
+
+    // Mostrar resultado
+    if(el) {
+      var html = resumen.split('\n').map(function(l){
+        l = l.trim();
+        if(!l) return '';
+        if(l.startsWith('•')) return '<p style="margin:4px 0">'+esc(l)+'</p>';
+        return '<p style="margin:4px 0">'+esc(l)+'</p>';
+      }).join('');
+      el.innerHTML = html || '<p style="color:#94A3B8">Sin alertas adicionales.</p>';
+    }
+    if(btn) { btn.style.display='none'; }
+
+    // Guardar en la planilla si hay URL del Apps Script
+    if(NORMAS_SCRIPT_URL) {
+      fetch(NORMAS_SCRIPT_URL, {
+        method:'POST',
+        body: JSON.stringify({ action:'guardar', financiador:osNombre, fechaNorma:fechaNorma, resumen:resumen })
+      }).catch(function(){});
+    }
+
+    // Actualizar cache local
+    cacheNormas[osNombre.toUpperCase()] = { fechaNorma:fechaNorma, resumen:resumen };
+
+  } catch(err) {
+    if(el) el.innerHTML = '<p style="color:#DC2626">Error al analizar: '+esc(err.message)+'</p>';
+    if(btn) { btn.disabled=false; btn.textContent='Reintentar'; }
+  }
+}
 
 var sel=null,blurT=null;
 var osIn=document.getElementById('os-in');
@@ -698,7 +770,37 @@ function buscar(){
     +'<a href="'+esc(url)+'" target="_blank" style="display:none;font-size:12px;color:#0B9E8A;padding:8px 12px;border:1px solid #0B9E8A;border-radius:8px;text-decoration:none">'
     +'\u2192 Ver credencial</a>'
     +'</div>';
-}).join('')+'</div></div></div>':'')    +'</div>';
+}).join('')+'</div></div></div>':'')    +(function(){
+  if(!r[31]||!r[31].trim()) return ''; // sin norma operativa
+  var fin = r[1].toUpperCase();
+  var fechaNorma = (r[33]||'').trim();
+  var cached = cacheNormas[fin];
+  var tieneResumen = cached && cached.resumen && cached.fechaNorma === fechaNorma;
+
+  var contenido = '';
+  if(tieneResumen) {
+    // Mostrar resumen guardado
+    contenido = cached.resumen.split('\n').map(function(l){
+      l=l.trim(); if(!l) return '';
+      return '<p style="margin:4px 0;font-size:13px;line-height:1.6">'+esc(l)+'</p>';
+    }).join('');
+    if(!contenido) contenido='<p style="color:#94A3B8;font-size:13px">Sin alertas adicionales.</p>';
+  } else {
+    // Mostrar botón para analizar
+    contenido = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+      +'<p style="font-size:13px;color:#64748B;margin:0">Hay una norma operativa disponible que no ha sido analizada aún.</p>'
+      +'<button id="ai-norma-btn" onclick="analizarNorma(''+esc(r[1])+'',''+esc(r[31])+'',''+esc(fechaNorma)+'')" '
+      +'style="background:#0B9E8A;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">'
+      +'✦ Analizar con IA</button>'
+      +'</div>';
+  }
+
+  return '<div style="background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:0 10px 10px 0;padding:14px 16px;margin-top:14px">'
+    +'<div style="font-size:10px;font-weight:700;color:#1E40AF;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✦ Análisis IA de la norma operativa</div>'
+    +'<div id="ai-norma-box">'+contenido+'</div>'
+    +'</div>';
+})()
++'</div>';
   document.getElementById('result').style.display='block';
   document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
