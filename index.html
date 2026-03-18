@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.4</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.5</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -603,7 +603,12 @@ async function analizarNorma(btn) {
     var resp = await fetch(PROXY_URL, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'analizarNorma', normaUrl:normaUrl, osNombre:osNombre })
+      body: JSON.stringify({
+        action:'analizarNorma',
+        normaUrl:normaUrl,
+        osNombre:osNombre,
+        tieneCosegLinks: !!(btn.dataset.coseg && btn.dataset.coseg.split(',').some(function(x){return x.trim().indexOf('http')===0;}))
+      })
     });
     var result = await resp.json();
     if(!result.success) throw new Error(result.error||'Error desconocido');
@@ -803,7 +808,7 @@ function buscar(){
     // Mostrar botón para analizar
     contenido = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
       +'<p style="font-size:13px;color:#64748B;margin:0">Hay una norma operativa disponible que no ha sido analizada aún.</p>'
-      +'<button id="ai-norma-btn" onclick="analizarNorma(this)" data-os="'+esc(r[1])+'" data-url="'+esc(r[31])+'" data-fecha="'+esc(fechaNorma)+'" '
+      +'<button id="ai-norma-btn" onclick="analizarNorma(this)" data-os="'+esc(r[1])+'" data-url="'+esc(r[31])+'" data-fecha="'+esc(fechaNorma)+'" data-coseg="'+esc(r[8])+'" '
       +'style="background:#0B9E8A;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">'
       +'✦ Analizar con IA</button>'
       +'</div>';
