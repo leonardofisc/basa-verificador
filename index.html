@@ -573,7 +573,8 @@ function loadNormas() {
   }).catch(function(e){ console.warn('No se pudo cargar normas:', e.message); });
 }
 
-async function analizarNorma(osNombre, normaUrl, fechaNorma) {
+async function analizarNorma(btn) {
+  var osNombre=btn.dataset.os, normaUrl=btn.dataset.url, fechaNorma=btn.dataset.fecha;
   var el = document.getElementById('ai-norma-box');
   var btn = document.getElementById('ai-norma-btn');
   if(btn) { btn.disabled = true; btn.textContent = 'Analizando...'; }
@@ -789,7 +790,7 @@ function buscar(){
     // Mostrar botón para analizar
     contenido = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
       +'<p style="font-size:13px;color:#64748B;margin:0">Hay una norma operativa disponible que no ha sido analizada aún.</p>'
-      +'<button id="ai-norma-btn" onclick="analizarNorma(''+esc(r[1])+'',''+esc(r[31])+'',''+esc(fechaNorma)+'')" '
+      +'<button id="ai-norma-btn" onclick="analizarNorma(this)" data-os="'+esc(r[1])+'" data-url="'+esc(r[31])+'" data-fecha="'+esc(fechaNorma)+'" '
       +'style="background:#0B9E8A;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">'
       +'✦ Analizar con IA</button>'
       +'</div>';
