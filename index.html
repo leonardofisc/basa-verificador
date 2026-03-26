@@ -92,15 +92,15 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
             <div class="ac-dd" id="ac-dd"></div>
           </div>
         </div>
-        <div class="field"><label>Plan</label><select id="plan-sel" disabled><option value="">Elegi la OS</option></select></div>
-        <div class="field"><label>Sede del sanatorio</label><select id="sede-sel" disabled><option value="">Elegi la OS</option></select></div>
+        <div class="field"><label>Plan</label><select id="plan-sel" disabled><option value="">Seleccionar</option></select></div>
+        <div class="field"><label>Clínica/Sanatorio</label><select id="sede-sel" disabled><option value="">Seleccionar</option></select></div>
         <div style="display:flex;align-items:flex-end"><button class="btn-ok" id="btn-ok" disabled onclick="buscar()">Verificar &#8594;</button></div>
       </div>
     </div>
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.5</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.7</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -696,7 +696,7 @@ function clearForm(){
   sel=null;
   ['plan-sel','sede-sel'].forEach(function(id){
     var s=document.getElementById(id);
-    s.innerHTML='<option value="">Elegi la OS</option>';
+    s.innerHTML='<option value="">Seleccionar</option>';
     s.disabled=true;
   });
   document.getElementById('btn-ok').disabled=true;
@@ -787,7 +787,7 @@ function buscar(){
   var imgUrl=url;
   var m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
   if(m) imgUrl='https://drive.google.com/uc?export=view&id='+m[1];
-  var thumbUrl='https://drive.google.com/thumbnail?id='+m[1]+'&sz=w400';
+  var thumbUrl = m ? 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w400' : url;
   return '<div style="display:inline-block;text-align:center;vertical-align:top">'
     +'<img src="'+esc(thumbUrl)+'" alt="Credencial" style="max-height:220px;max-width:320px;border-radius:8px;border:1px solid #E2E8F0;cursor:pointer;display:block" onclick="window.open(\''+esc(url)+'\',\'_blank\')" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;inline-block&quot;">'
     +'<a href="'+esc(url)+'" target="_blank" style="display:none;font-size:12px;color:#0B9E8A;padding:8px 12px;border:1px solid #0B9E8A;border-radius:8px;text-decoration:none">'
