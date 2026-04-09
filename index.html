@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.7</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.8</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -505,21 +505,132 @@ function getCell(row, idx) {
   }
   return String(v).trim();
 }
+
+// ── Mapeo dinámico de columnas por nombre ──────────────────────────
+// Lee la fila de encabezados y construye un índice { NOMBRE_NORMALIZADO: idx }
+// Esto hace que el verificador sea inmune a columnas insertadas/movidas.
+var COL = {}; // se llena en loadFromSheets() con la fila 0
+var SEDES_IDX = []; // índices de las 21 columnas de sedes en la planilla
+
+var NOMBRES_ESPERADOS = {
+  STATUS:      ['STATUS','ESTADO'],
+  FINANCIADOR: ['FINANCIADOR'],
+  OBS:         ['OBSERVACIONES','OBS'],
+  PLANES:      ['PLANES'],
+  SC:          ['FIGURA EN SC','SC','FIGURA SC'],
+  DOC:         ['DOCUMENTACION','DOC','DOCUMENTACIÓN'],
+  ENFER:       ['ENFERMERIA','ENFERMERÍA'],
+  APB:         ['APB'],
+  COSEG:       ['COSEGUROS','COSEGURO'],
+  VALID:       ['VALIDADOR'],
+  NORMA:       ['NORMA OPERATIVA','NORMA'],
+  CRED:        ['FOTO CREDENCIAL','CREDENCIAL','FOTO CREDENCIAL'],
+  FECHA:       ['ACT.','ACTUALIZACION','ACTUALIZACIÓN','FECHA']
+};
+
+var NOMBRES_SEDES = ['CENTRO GALLEGO','SAN JOSE','POLICLINICO CENTRAL UOM','UOM AVELLANEDA',
+  'SANTA CLARA QUILMES','SANTA CLARA VARELA','UOM SAN MARTIN','CENTRO MEDICO TALAR',
+  'SANTA CLARA ZARATE','SAGRADO CORAZON DE DON TORCUATO','SAGRADO CORAZON DON TORCUATO',
+  'GENERAL SARMIENTO','MORON','CAMPANA','SANATORIO LOBOS','ROSENDO GARCIA',
+  'UOM CASILDA','SAN JUAN','STA CLARA MENDOZA','DORREGO','SOCORROS MUTUOS','SANTA ROSA'];
+
+function normCol(s) {
+  return String(s||'').toUpperCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function buildColMap(headerRow) {
+  COL = {};
+  SEDES_IDX = [];
+  var found = [];
+  var warnings = [];
+
+  // Mapear cada columna por nombre
+  for (var i = 0; i < headerRow.length; i++) {
+    var nombre = normCol(headerRow[i] && headerRow[i].v ? headerRow[i].v : '');
+    if (!nombre) continue;
+
+    // Verificar si es una columna conocida
+    for (var key in NOMBRES_ESPERADOS) {
+      var aliases = NOMBRES_ESPERADOS[key];
+      for (var a = 0; a < aliases.length; a++) {
+        if (nombre === normCol(aliases[a])) {
+          COL[key] = i;
+          found.push(key);
+          break;
+        }
+      }
+    }
+
+    // Verificar si es una sede
+    for (var ns = 0; ns < NOMBRES_SEDES.length; ns++) {
+      if (nombre === normCol(NOMBRES_SEDES[ns])) {
+        // Evitar duplicados (ej: dos variantes del mismo nombre)
+        var yaEsta = SEDES_IDX.some(function(x){ return x.idx === i; });
+        if (!yaEsta) SEDES_IDX.push({ idx: i, nombre: SEDES[Math.min(ns, SEDES.length-1)] || nombre });
+        break;
+      }
+    }
+  }
+
+  // Verificar columnas críticas y advertir si faltan
+  var criticas = ['STATUS','FINANCIADOR','PLANES'];
+  criticas.forEach(function(k){
+    if (COL[k] === undefined) warnings.push(k);
+  });
+
+  if (warnings.length > 0) {
+    console.warn('⚠️ Verificador: columnas no encontradas en la planilla:', warnings.join(', '));
+    console.warn('Columnas detectadas:', JSON.stringify(COL));
+  } else {
+    console.log('✅ Verificador: mapa de columnas OK —', Object.keys(COL).length, 'columnas,', SEDES_IDX.length, 'sedes');
+  }
+
+  return warnings;
+}
+
 function parseSheetRow(row) {
-  var fin = getCell(row, 2);
+  // Indices reales actuales como fallback (estructura verificada 09/04/2026):
+  // B=1 STATUS, C=2 FINANCIADOR, D=3 OBS, E=4 NORMA, F=5 PLANES,
+  // G=6 SC, H=7 DOC, I=8 ENFER, J=9 APB, K=10 COSEG, L=11 VALID,
+  // M-AG(12-32) sedes, AH=33 CRED, AI=34 FECHA
+  var fin = getCell(row, COL.FINANCIADOR !== undefined ? COL.FINANCIADOR : 2);
   if (!fin) return null;
-  var planes = getCell(row, 4);
+
+  var planes = getCell(row, COL.PLANES !== undefined ? COL.PLANES : 5);
   if (planes.indexOf('\n') >= 0) {
     planes = planes.split('\n').map(function(p){return p.trim();}).filter(Boolean).join(' -- ');
   }
-  var entry = [getCell(row,1),fin,getCell(row,3),planes,getCell(row,5),getCell(row,6),getCell(row,7),getCell(row,8),getCell(row,9),getCell(row,10)];
-  for (var s=11;s<=31;s++) entry.push((row[s]&&row[s].v)?'1':'0');
-  // Cols nuevas: AG=32 NORMA OPERATIVA, AH=33 FOTO CREDENCIAL, AI=34 ACT.
-  entry.push(getCell(row,32)); // [31] NORMA OPERATIVA
-  entry.push(getCell(row,33)); // [32] FOTO CREDENCIAL
-  entry.push(getCell(row,34)); // [33] ACT.
+
+  var entry = [
+    getCell(row, COL.STATUS !== undefined ? COL.STATUS : 1),  // [0]
+    fin,                                                        // [1]
+    getCell(row, COL.OBS   !== undefined ? COL.OBS    : 3),   // [2]
+    planes,                                                     // [3]
+    getCell(row, COL.SC    !== undefined ? COL.SC     : 6),   // [4]
+    getCell(row, COL.DOC   !== undefined ? COL.DOC    : 7),   // [5]
+    getCell(row, COL.ENFER !== undefined ? COL.ENFER  : 8),   // [6]
+    getCell(row, COL.APB   !== undefined ? COL.APB    : 9),   // [7]
+    getCell(row, COL.COSEG !== undefined ? COL.COSEG  : 10),  // [8]
+    getCell(row, COL.VALID !== undefined ? COL.VALID  : 11)   // [9]
+  ];
+
+  // Sedes [10..30]: usar indices detectados por nombre, fallback M-AG (12-32)
+  for (var si = 0; si < SEDES.length; si++) {
+    var sedeInfo = SEDES_IDX[si];
+    var fallbackIdx = 12 + si;
+    var val = sedeInfo
+      ? ((row[sedeInfo.idx] && row[sedeInfo.idx].v) ? '1' : '0')
+      : ((row[fallbackIdx] && row[fallbackIdx].v)   ? '1' : '0');
+    entry.push(val);
+  }
+
+  entry.push(getCell(row, COL.NORMA !== undefined ? COL.NORMA :  4)); // [31] NORMA OPERATIVA
+  entry.push(getCell(row, COL.CRED  !== undefined ? COL.CRED  : 33)); // [32] FOTO CREDENCIAL
+  entry.push(getCell(row, COL.FECHA !== undefined ? COL.FECHA : 34)); // [33] ACT.
   return entry;
 }
+
 function loadFromSheets() {
   var url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json';
   var el=document.getElementById('data-status');
@@ -527,6 +638,20 @@ function loadFromSheets() {
     var s=raw.indexOf('{'),e=raw.lastIndexOf('}');
     if(s<0||e<0) throw new Error('Respuesta invalida');
     var data=JSON.parse(raw.substring(s,e+1));
+
+    // ── Leer encabezados y construir mapa de columnas ──────────
+    var cols = data.table.cols || [];
+    var headerRow = cols.map(function(c){ return { v: c.label || '' }; });
+    var warnings = buildColMap(headerRow);
+
+    // Si faltan columnas críticas, mostrar advertencia en el footer
+    if (warnings.length > 0) {
+      el.textContent = '\u26a0\ufe0f Planilla modificada: columnas no encontradas: ' + warnings.join(', ') + '. Contactar soporte técnico.';
+      el.style.color = '#DC2626';
+      el.style.fontWeight = '600';
+      // Continuar de todas formas con los datos disponibles
+    }
+
     var rows=data.table.rows;
     if(!rows||rows.length<1) throw new Error('Sin filas');
     var newD=[];
@@ -539,8 +664,14 @@ function loadFromSheets() {
     D=newD;
     var now=new Date();
     var ts=now.toLocaleDateString('es-AR')+' '+now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    el.textContent='Datos actualizados '+ts+' · '+newD.length+' obras sociales';
-    el.style.color='#0B9E8A';
+    if (warnings.length === 0) {
+      el.textContent='Datos actualizados '+ts+' · '+newD.length+' obras sociales';
+      el.style.color='#0B9E8A';
+    } else {
+      el.textContent='\u26a0\ufe0f Datos actualizados '+ts+' · '+newD.length+' OS · Columnas faltantes: '+warnings.join(', ');
+      el.style.color='#D97706';
+      el.style.fontWeight='600';
+    }
   }).catch(function(err){
     console.warn('Sheets:',err.message,'usando datos locales');
     var fechaArchivo = new Date(document.lastModified).toLocaleDateString('es-AR');
