@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.9</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.2.0</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -933,7 +933,11 @@ function buscar(){
     +'<a href="'+esc(url)+'" target="_blank" style="display:none;font-size:12px;color:#0B9E8A;padding:8px 12px;border:1px solid #0B9E8A;border-radius:8px;text-decoration:none">'
     +'\u2192 Ver credencial</a>'
     +'</div>';
-}).join('')+'</div></div></div>':'')    +(function(){
+}).join('')+'</div></div></div>':'')    +(r[34]&&r[34].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Información relevante — Paciente internado</div><div class="cb"><p>'+esc(r[34])+'</p></div></div>':'')
+    +(r[35]&&r[35].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Documentación guardia</div><div class="cb"><p>'+esc(r[35])+'</p></div></div>':'')
+    +(r[36]&&r[36].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Prácticas sin autorización</div><div class="cb"><p>'+esc(r[36])+'</p></div></div>':'')
+    +(r[37]&&r[37].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>Prácticas con autorización</div><div class="cb"><p>'+esc(r[37])+'</p></div></div>':'')
+    +(function(){
   if(!r[31]||!r[31].trim()) return ''; // sin norma operativa
   var fin = r[1].toUpperCase();
   var fechaNorma = (r[33]||'').trim();
