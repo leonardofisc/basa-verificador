@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.2.1</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.2.2</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -892,6 +892,7 @@ function buscar(){
     +'<div class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+icons[cls]+'</svg></div>'
     +'<div><div class="bt">'+bT+'</div><div class="bs">'+bS+'</div></div></div>'
     +'<div class="ai-box"><div class="ai-lbl">An\u00e1lisis para el admisionista</div>'+ai+'</div>'
+    +'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sedes incluidas en el contrato</div><div class="cb"><div style="display:flex;flex-wrap:wrap">'+seH+'</div></div></div>'
     +'<div class="cards2">'
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Informaci\u00f3n del financiador</div><div class="cb"><p><strong>'+esc(r[1])+'</strong></p>'+(r[2]?'<p style="color:#64748B;font-size:12px;margin-top:6px">'+esc(r[2])+'</p>':'<p style="color:#CBD5E1">Sin observaciones adicionales</p>')+'</div></div>'
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Documentaci\u00f3n a presentar</div><div class="cb">'+dH+'</div></div>'
@@ -935,7 +936,6 @@ function buscar(){
     +'\u2192 Ver credencial</a>'
     +'</div>';
 }).join('')+'</div></div></div>':'')
-    +'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sedes incluidas en el contrato</div><div class="cb"><div style="display:flex;flex-wrap:wrap">'+seH+'</div></div></div>'
     +(r[34]&&r[34].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Información relevante — Paciente internado</div><div class="cb"><p>'+esc(r[34])+'</p></div></div>':'')
     +(r[35]&&r[35].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Documentación guardia</div><div class="cb"><p>'+esc(r[35])+'</p></div></div>':'')
 
