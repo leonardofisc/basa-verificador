@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.8</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.1.9</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -524,7 +524,11 @@ var NOMBRES_ESPERADOS = {
   COSEG:       ['COSEGUROS','COSEGURO'],
   VALID:       ['VALIDADOR'],
   NORMA:       ['NORMA OPERATIVA','NORMA'],
-  CRED:        ['FOTO CREDENCIAL','CREDENCIAL','FOTO CREDENCIAL'],
+  CRED:        ['FOTO CREDENCIAL','CREDENCIAL'],
+  INFO_INTERNADO: ['INFORMACION RELEVANTE PX INTERNADO','INFO INTERNADO','INFORMACION INTERNADO'],
+  DOC_GUARDIA:    ['DOCUMENTACION GUARDIA','DOC GUARDIA'],
+  PRACT_SIN_AUT:  ['PRACTICAS AMBULATORIAS SIN AUTORIZACION','PRACTICAS SIN AUTORIZACION'],
+  PRACT_CON_AUT:  ['PRACTICAS AMBULATORIAS CON AUTORIZACION','PRACTICAS CON AUTORIZACION'],
   FECHA:       ['ACT.','ACTUALIZACION','ACTUALIZACIÓN','FECHA']
 };
 
@@ -590,10 +594,11 @@ function buildColMap(headerRow) {
 }
 
 function parseSheetRow(row) {
-  // Indices reales actuales como fallback (estructura verificada 09/04/2026):
+  // Indices reales actuales como fallback (estructura verificada 05/05/2026):
   // B=1 STATUS, C=2 FINANCIADOR, D=3 OBS, E=4 NORMA, F=5 PLANES,
   // G=6 SC, H=7 DOC, I=8 ENFER, J=9 APB, K=10 COSEG, L=11 VALID,
-  // M-AG(12-32) sedes, AH=33 CRED, AI=34 FECHA
+  // M-AG(12-32) sedes, AH=33 CRED, AI=34 INFO_INTERNADO,
+  // AJ=35 DOC_GUARDIA, AK=36 PRACT_SIN_AUT, AL=37 PRACT_CON_AUT, AM=38 FECHA
   var fin = getCell(row, COL.FINANCIADOR !== undefined ? COL.FINANCIADOR : 2);
   if (!fin) return null;
 
@@ -625,9 +630,13 @@ function parseSheetRow(row) {
     entry.push(val);
   }
 
-  entry.push(getCell(row, COL.NORMA !== undefined ? COL.NORMA :  4)); // [31] NORMA OPERATIVA
-  entry.push(getCell(row, COL.CRED  !== undefined ? COL.CRED  : 33)); // [32] FOTO CREDENCIAL
-  entry.push(getCell(row, COL.FECHA !== undefined ? COL.FECHA : 34)); // [33] ACT.
+  entry.push(getCell(row, COL.NORMA          !== undefined ? COL.NORMA          :  4)); // [31] NORMA OPERATIVA
+  entry.push(getCell(row, COL.CRED           !== undefined ? COL.CRED           : 33)); // [32] FOTO CREDENCIAL
+  entry.push(getCell(row, COL.FECHA          !== undefined ? COL.FECHA          : 38)); // [33] ACT. (AM)
+  entry.push(getCell(row, COL.INFO_INTERNADO !== undefined ? COL.INFO_INTERNADO : 34)); // [34] INFO PX INTERNADO (AI)
+  entry.push(getCell(row, COL.DOC_GUARDIA    !== undefined ? COL.DOC_GUARDIA    : 35)); // [35] DOC GUARDIA (AJ)
+  entry.push(getCell(row, COL.PRACT_SIN_AUT  !== undefined ? COL.PRACT_SIN_AUT  : 36)); // [36] PRACT SIN AUT (AK)
+  entry.push(getCell(row, COL.PRACT_CON_AUT  !== undefined ? COL.PRACT_CON_AUT  : 37)); // [37] PRACT CON AUT (AL)
   return entry;
 }
 
