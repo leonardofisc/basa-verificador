@@ -100,7 +100,7 @@ footer{text-align:center;font-size:11px;color:#94A3B8;padding:20px}
   </div>
   <div id="result"></div>
 </div>
-<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.2.0</span></footer>
+<footer>Red BASA &middot; <span id="data-status">Cargando datos...</span> &middot; Solo uso interno &middot; Admisiones y Callcenter &middot; <span style="color:#0B9E8A;font-weight:600">v1.2.1</span></footer>
 <script>
 var SHEET_ID = '1WFFAuF-s8o-0YMJPjZdLuXzG3oW7xn-yUpxAn1o4L1Y';
 var NORMAS_SHEET_ID = '1XkxC2ilo3ddsm49q8BrR82DOwsOiPAPt4w7DPUtviFo';
@@ -917,9 +917,10 @@ function buscar(){
   }
   return '<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Coseguros y cobertura adicional</div><div class="cb">'+cosegH+'<p><strong>Enfermería:</strong> '+esc(r[6]||'—')+'</p><p><strong>APB:</strong> '+esc(r[7]||'—')+'</p></div></div>';
 })()
+    +(r[36]&&r[36].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Prácticas sin autorización</div><div class="cb"><p>'+esc(r[36])+'</p></div></div>':'')
+    +(r[37]&&r[37].trim()?'<div class="card" style="border-left:3px solid #F59E0B;background:#FFFBEB"><div class="ch" style="color:#92400E"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Prácticas con autorización</div><div class="cb"><p>'+esc(r[37])+'</p></div></div>':'')
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Planes disponibles</div><div class="cb">'+(plan?'<div style="background:#ECFDF5;color:#065F46;font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:8px">Plan seleccionado: <strong>'+esc(plan)+'</strong></div>':'')+'<div>'+plH+'</div></div></div>'
     +'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Validador de afiliados</div><div class="cb">'+vH+'</div></div>'
-    +'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sedes incluidas en el contrato</div><div class="cb"><div style="display:flex;flex-wrap:wrap">'+seH+'</div></div></div>'
     +(r[31]&&r[31].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Norma operativa</div><div class="cb"><a class="lnk" href="'+esc(r[31])+'" target="_blank">\u2192 Ver norma operativa</a></div></div>':'')    +(r[32]&&r[32].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Credenciales</div><div class="cb"><div style="display:flex;flex-wrap:wrap;gap:10px">'+r[32].split(',').map(function(url){
   url=url.trim();
   if(!url) return '';
@@ -933,10 +934,11 @@ function buscar(){
     +'<a href="'+esc(url)+'" target="_blank" style="display:none;font-size:12px;color:#0B9E8A;padding:8px 12px;border:1px solid #0B9E8A;border-radius:8px;text-decoration:none">'
     +'\u2192 Ver credencial</a>'
     +'</div>';
-}).join('')+'</div></div></div>':'')    +(r[34]&&r[34].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Información relevante — Paciente internado</div><div class="cb"><p>'+esc(r[34])+'</p></div></div>':'')
+}).join('')+'</div></div></div>':'')
+    +'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sedes incluidas en el contrato</div><div class="cb"><div style="display:flex;flex-wrap:wrap">'+seH+'</div></div></div>'
+    +(r[34]&&r[34].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Información relevante — Paciente internado</div><div class="cb"><p>'+esc(r[34])+'</p></div></div>':'')
     +(r[35]&&r[35].trim()?'<div class="card full"><div class="ch"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Documentación guardia</div><div class="cb"><p>'+esc(r[35])+'</p></div></div>':'')
-    +(r[36]&&r[36].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Prácticas sin autorización</div><div class="cb"><p>'+esc(r[36])+'</p></div></div>':'')
-    +(r[37]&&r[37].trim()?'<div class="card"><div class="ch"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>Prácticas con autorización</div><div class="cb"><p>'+esc(r[37])+'</p></div></div>':'')
+
     +(function(){
   if(!r[31]||!r[31].trim()) return ''; // sin norma operativa
   var fin = r[1].toUpperCase();
